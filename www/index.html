@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<head>
+<title>ccc-gistemp Map Viewer</title>
+<link href='css/main.css' rel='stylesheet'/>
+<!-- Google font -->
+<link href='http://fonts.googleapis.com/css?family=Special+Elite' rel='stylesheet' type='text/css'>
+<script src='js/jquery-1.7.1.min.js'></script>
+<script src='js/main.js'></script>
+<script src='js/remote.js'></script>
+</head>
+<body onload="init()">
+<h1>ccc-gistemp Map Viewer</h1>
+<canvas id='main_canvas' width='1000' height='500'></canvas>
+<br/>
+<!--<input type='button' class='btn' value="Draw Map" onclick='map.drawImage("img/land_1000x500.png")'/>-->
+<input type='button' class='btn' value="land" onclick='map.loadData("land", 144)'/>
+<input type='button' class='btn' value="topo" onclick='map.loadData("topo", 144)'/>
+<input type='button' class='btn' value="radiance" onclick='map.loadData("radiance", 144)'/>
+<input type='button' class='btn' value="coords" onclick="map.drawCoords()"/>
+<input type='button' class='btn' value="me" onclick="map.point(-79, 36)"/> <!-- Chapel Hill -->
+<input type='button' class='btn' value="topo_img" onclick="map.drawImage('img/topo_1000x500.png')"/>
+<input type='button' class='btn' value="radiance_img" onclick="map.drawImage('img/radiance_1000x500.png')"/>
+<div id='coords' style='font-family:helvetica'></div>
+</body>
+</html>
