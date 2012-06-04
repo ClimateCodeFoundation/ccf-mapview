@@ -22,20 +22,27 @@ def main():
     right = float(form.getvalue('right'))
     top = float(form.getvalue('top'))
     bottom = float(form.getvalue('bottom'))
-    xres = int(form.getvalue('xres'))
+    xres = form.getvalue('xres')
+    if xres != 'grid': # 'grid' indicates using 8k grid
+        xres = int(xres)
     
-    if os.path.exists(datadir + '%s.%i' % (datatype, xres)):
-        if datatype == 'topo':
+    if os.path.exists(datadir + '%s.%s' % (datatype, str(xres))):
+        if datatype == 'topo' or datatype == 'ost2010' or datatype == 'lt2010' or datatype=='mixed.2010' or datatype=='mixed.1880.2010' or datatype=='land.1880.2010' or datatype=='ocean.1880.2010':
             dt = numpy.int16
+        elif datatype == 'urban':
+            dt = numpy.dtype(bool)
         else:
             dt = numpy.uint8
-        grid = numpy.fromfile(datadir + '%s.%i' % (datatype, xres), dtype=dt)
+        grid = numpy.fromfile(datadir + '%s.%s' % (datatype, str(xres)), dtype=dt)
+        if datatype == 'urban':
+            grid = grid.astype(numpy.uint8)
     else:
-        output('no such data type')
+        output('no such data')
         return
     length = grid.shape[0]
-    yres = length / xres
-    grid = grid.reshape((yres, xres))
+    if xres != 'grid':
+        yres = length / xres
+        grid = grid.reshape((yres, xres))
     #result = "\n".join(["".join([chr(grid[i,j]) for j in xrange(grid.shape[1])]) for i in xrange(grid.shape[0])])
     result = grid.tolist()
     result = [left, right, top, bottom, xres, datatype, result]

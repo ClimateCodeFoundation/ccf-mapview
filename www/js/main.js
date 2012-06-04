@@ -1,4 +1,35 @@
-function attacher() {
+BLOCKS = { // [displayName, fileName, startYear, endYear, resolution, colorMap]
+            "land": ["land", 144, [-180, 90], 2.5, [[0, null, [160,160,160,1], [160,160,160,1]]]], // 144 columns, rooted at 180W, 90N, 2.5 degrees unit squares
+            "topo": ["topo", 144, [-180, 90], 2.5, [[null, 0, [0,0,190,1], [0,0,190,0.5]], [0, null, [0,190,0,0.3], [0,190,0,1]]]],
+            "radiance": ["radiance", 144, [-180, 90], 2.5, [[0, null, [255,0,0,0.3], [255,0,0,1]]]],
+};
+
+GRIDS = {
+         "ost2010": ["ocean input", 2010, 2010, "grid", [[null, 0, [0, 0, 255, 1], [0, 0, 255, 0.3]], [0, null, [255, 0, 0, 0.3], [255, 0, 0, 1]]]],
+         "lt2010": ["land merged", 2010, 2010, "grid", [[null, 0, [0, 0, 255, 1], [0, 0, 255, 0.3]], [0, null, [255, 0, 0, 0.3], [255, 0, 0, 1]]]],
+         "landmask": ["land mask", 2010, 2010, "grid", [[0, null, [0,0,0,0.3], [0,0,0,0.3]]]],
+         "mixed.2010": ["mixed final", 2010, 2010, "grid", [[null, 0, [0, 0, 255, 1], [0, 0, 255, 0.3]], [0, null, [255, 0, 0, 0.3], [255, 0, 0, 1]]]]
+};
+
+//            "land": ["land", 1880, 2010, "grid", [[null, 0, [0, 0, 255, 1], [0, 0, 255, 0.3]], [0, null, [255, 0, 0, 0.3], [255, 0, 0, 1]]]],
+//            "ocean": ["ocean", 1880, 2010, "grid", [[null, 0, [0, 0, 255, 1], [0, 0, 255, 0.3]], [0, null, [255, 0, 0, 0.3], [255, 0, 0, 1]]]],
+//            "mixed": ["mixed", 1880, 2010, "grid", [[null, 0, [0, 0, 255, 1], [0, 0, 255, 0.3]], [0, null, [255, 0, 0, 0.3], [255, 0, 0, 1]]]]
+
+// color map: [start, end, start color, end color] where value are mapped in (start, end] (including the end but not the start)
+//            except for null (minimum), which is included
+
+TEMPCOLORMAP = [[null, 0, [0, 0, 255, 1], [0, 0, 255, 0.3]], [0, null, [255, 0, 0, 0.3], [255, 0, 0, 1]]];
+
+IMAGES = {
+          "topo": ["img/topo_1000x500.png", [-180, 90]],
+          "radiance": ["img/radiance_1000x500.png", [-180, 90]],
+          "border": ["img/border2_1000x500.png", [-180, 90]]
+};
+
+FIRSTYEAR = 1880;
+LASTYEAR = 2010;
+
+function event_attacher() {
     var o = arguments[0];
     var f = arguments[1];
     var params = [];
@@ -9,6 +40,19 @@ function attacher() {
     }
 }
 
+function attacher() {
+    var o = arguments[0];
+    var f = arguments[1];
+    var params = [];
+    for(var i = 2; i < arguments.length; i++)
+        params.push(arguments[i]);
+    return function() {
+        for(var i in arguments)
+            params.push(arguments[i]);
+        return f.apply(o, params);
+    }
+}
+
 // 0-255 only
 function toHex(v) {
     var hex = ['0', '1', '2', '3', '4', '5', ,'6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'];
@@ -16,176 +60,166 @@ function toHex(v) {
 }
 
 var map;
+var grid;
 
 function init() {
     console.log('making map...');
-    map = new Map(1000, 500);
+    // start with 3 layers, zoom 4x (4 pixels per degree)
+    map = new CanvasMap(document.getElementById('map'), 3, 4); //(container, numLayers, zoom) where zoom indicates pixels per degree
+    // preload grid data, which will then go on to get more data
+    console.log('loading grid...');
+    getGrid();
 }
 
-function Map(width, height) {
-    var $canvas = $('#main_canvas');
-    var canvas = $canvas.get(0);
-    var ctx = canvas.getContext('2d');
-    
-    $canvas.mousemove(attacher(this, function(e) {
-        var x = e.pageX - $(e.currentTarget).offset().left;
-        var y = e.pageY - $(e.currentTarget).offset().top;
-        var lon = x/this.width * (this.right-this.left) + this.left;
-        var lat = (1 - y/this.height) * (this.top-this.bottom) + this.bottom;
-        if(lon < 0)
-            lon = (lon * -1).toFixed(2) + ' W';
-        else
-            lon = lon.toFixed(2) + ' E';
-        if(lat < 0)
-            lat = (lat * -1).toFixed(2) + ' S';
-        else
-            lat = lat.toFixed(2) + ' N';
-        $('#coords').text(lon + ', ' + lat);
-    }));
-    
-    this.width = width;
-    this.height = height;
-    
-    this.update = function(left, right, top, bottom) {
-        /*
-          these indicate coordinates, by degree (or fraction thereof), of the
-          west, east, north, and south boundaries, respectively, of the viewing
-          window
-        */
-        this.left = left;
-        this.right = right;
-        this.top = top;
-        this.bottom = bottom;
-    }
-    
-    this.drawCoords = function() {
-        ctx.lineWidth = 1;
-        // by default, draw every 10 degrees
-        var start = Math.floor(this.left / 10) * 10 + 10;
-        var deg_width = this.width / (this.right - this.left);
-        for(var deg = start; deg < this.right; deg+=10) {
-            var x = deg - this.left;
-            if(deg == 0)
-                ctx.strokeStyle = 'rgba(255,0,0,0.3)';
-            else
-                ctx.strokeStyle = 'rgba(0,0,0,0.3)';
-            ctx.beginPath();
-            ctx.moveTo(x * deg_width, 0);
-            ctx.lineTo(x * deg_width, this.height);
-            ctx.stroke();
+function getGrid() {
+    var handle = {
+        'callback': attacher(this, function(data) {
+            grid = data; // we will keep this here (globally), not as a part of the map
+            moreData();
+        }),
+        'error': function(msg) {
+            console.log(msg);
         }
-        var start = Math.floor(this.bottom / 10) * 10 + 10;
-        var deg_height = this.height / (this.top - this.bottom);
-        for(var deg = start; deg < this.top; deg+=10) {
-            var y = deg - this.bottom;
-            if(deg == 0)
-                ctx.strokeStyle = 'rgba(255,0,0,0.3)';
-            else
-                ctx.strokeStyle = 'rgba(0,0,0,0.3)';
-            ctx.beginPath();
-            ctx.moveTo(0, this.height - y*deg_height);
-            ctx.lineTo(this.width, this.height - y*deg_height);
-            ctx.stroke();
+    };
+    RPC('services/grid.py', handle, {});
+}
+
+function moreData() {
+    console.log('loading more data...');
+    //getVectorData('static/land.110.json', 2, 'land.110'); // layer 2 (top)
+    //getGridData('mixed.2010', 1); // put it on layer 1 (the middle)
+    //map.load("img/radiance_1000x500.png", 'radiance_img', 'img', [-180, 90], 1); // middle layer
+    map.update();
+}
+
+function zoom(z) {
+    map.changeZoom(z);
+}
+
+function pan(x, y) {
+    map.pan(x, y);
+}
+
+function getVectorData(src, layer, id) {
+    var handle = {
+        'callback': attacher(this, function(data) {
+            map.load(data, id, 'vector', [], layer); // [] means there is no metadata
+            map.update(); // this will cause it to render
+        }),
+        'error': function(msg) {
+            console.log(msg);
         }
-    }
+    };
+    JSON(src, handle, {});
+}
     
-    // just draws a point at the specified longitude/latitude with W and S being negative
-    this.point = function(x, y) {
-        var deg_width = this.width / (this.right - this.left);
-        var deg_height = this.height / (this.top - this.bottom);
-        var x = (x - this.left) * deg_width;
-        var y = (y - this.bottom) * deg_height;
-        ctx.fillStyle = '#0000FF';
-        ctx.beginPath();
-        ctx.arc(x,this.height-y,3,0,Math.PI*2,true);  // (x,y,radius,radian_start,radian_end,fill)
-        ctx.fill();
-    }
-    
-    $canvas.resize(function() {
-        this.width = $canvas.width();
-        this.height = $canvas.height();
-        $canvas.attr('width', this.width);
-        $canvas.attr('height', this.height);
-    });
-    
-    this.drawImage = function(src, x, y) {
-        if(x == null)
-            x = 0;
-        if(y == null)
-            y = 0;
-        var im = new Image();
-        im.src = src;
-        im.onload = function() {
-            ctx.drawImage(im, x, y);
+function getGridData(id, layer) {
+    var colormap = GRIDS[id][4];
+    var handle = {
+        'callback': attacher(this, function(data) {
+            map.load(data[6], id, 'grid', [grid, colormap], layer) // the rest of data is metadata
+            map.update();
+        }),
+        'error': function(msg) {
+            console.log(msg);
         }
-    }
-    
-    this.loadData = function(dataset, resolution) {
-        RPC('services/data.py', this, {'data':dataset, 'left':this.left, 'right':this.right, 'top':this.top, 'bottom':this.bottom, 'xres':resolution});
-    }
-    
-    this.callback = function(data) {
-        var left = data[0];
-        var right = data[1];
-        var top = data[2];
-        var bottom = data[3];
-        var xres = data[4];
-        var datatype = data[5];
-        var block_width = this.width / xres; // fix this to incorporate left, right, etc
-        data = data[6]; // the bulk of it
-        
-        // compute range
-        var maximum = null;
-        var minimum = null;
-        for(var i = 0; i < data.length; i++) {
-            for(var j = 0; j < data[i].length; j++) {
-                if(maximum == null || data[i][j] > maximum)
-                    maximum = data[i][j];
-                if(minimum == null || data[i][j] < minimum)
-                    minimum = data[i][j];
-            }
+    };
+    RPC('services/data.py', handle, {'data':id, 'left':map.w, 'right':map.e, 'top':map.n, 'bottom':map.s, 'xres':'grid'});
+}
+
+function getUniformData(id, layer) {
+    var cols = BLOCKS[id][1];
+    var coords = BLOCKS[id][2];
+    var block_size = BLOCKS[id][3];
+    var colormap = BLOCKS[id][4];
+    var handle = {
+        'callback': attacher(this, function(data) {
+            map.load(data[6], id, 'uniform', [cols, coords, block_size, colormap], layer) // the rest of data is metadata
+            map.update();
+        }),
+        'error': function(msg) {
+            console.log(msg);
         }
-        
-        for(var i = 0; i < data.length; i++) {
-            for(var j = 0; j < data[i].length; j++) {
-                var x = j * block_width;
-                var y = i * block_width;
-                
-                if(datatype == 'land') {
-                    if(data[i][j] == 1) {
-                        ctx.fillStyle = '#A0A0A0';
-                        ctx.fillRect(x, y, block_width, block_width);
-                    }
-                }
-                
-                else if(datatype == 'topo') {
-                    if(data[i][j] >= 0) {
-                        var c = 0.3 + 0.7 * (data[i][j] - 0) / (maximum - 0); // baseline of 30% opacity
-                        ctx.fillStyle = 'rgba(0,190,0,' + c + ')' //'#' + h + h + h;
-                        ctx.fillRect(x, y, block_width, block_width);
-                    }
-                    else { // water
-                        var c = 0.5 + 0.5 * (0 - data[i][j]) / (0 - minimum); // higher is closer to the bottom of the ocean
-                        ctx.fillStyle = 'rgba(0,0,190,' + c + ')' //'#' + h + h + h;
-                        ctx.fillRect(x, y, block_width, block_width);
-                    }
-                }
-                
-                else if(datatype == 'radiance') {
-                    if(data[i][j] > 0) {
-                        var c = 0.3 + 0.7 * (data[i][j] - minimum) / (maximum - minimum); // darker black means more radiance (weird, right?)
-                        //var h = toHex(Math.floor(c*255));
-                        ctx.fillStyle = 'rgba(255,0,0,' + c + ')' //'#' + h + h + h;
-                        ctx.fillRect(x, y, block_width, block_width);
-                    }
-                }
-            }
+    };
+    RPC('services/data.py', handle, {'data':id, 'left':map.w, 'right':map.e, 'top':map.n, 'bottom':map.s, 'xres':cols});
+}
+
+function getImage(id, layer) {
+    var src = IMAGES[id][0];
+    var coords = IMAGES[id][1];
+    map.load(src, id, 'img', coords, layer);
+    map.update();
+}
+    
+function animate(dataset, start_year, end_year, res) {
+    loop(start_year - FIRSTYEAR);
+}
+    
+function loop(year) {
+    if(year >= map.nyears)
+        return;
+
+    $('#yearSlider').val(year+FIRSTYEAR);
+    $('#currYear').text(year+FIRSTYEAR);
+    
+    //var timer = new Date();
+    //var t0 = timer.getUTCMilliseconds();
+    drawYear(year, map.nyears);
+    //timer = new Date();
+    //var t1 = timer.getUTCMilliseconds();
+    //console.log('drawn ' + (year+1880) + ' in ' + (t1-t0) + 'e-3 s');
+    setTimeout(attacher(this, loop, year+1, map.nyears), 1);
+}
+    
+function drawYear(year) {
+    var grid = [];
+    for(var j = year; j < map.data.length; j+=map.nyears) {
+        grid.push(map.data[j]);
+    }
+    if(grid.length < GRIDCELLS)
+        console.log('year ' + (year+FIRSTYEAR) + ' too short');
+    else {
+        map.clear();
+        //console.log('drawing ' + (year+FIRSTYEAR))
+        drawLayer(grid, 'mixed', 'grid');
+    }
+}
+    
+function mapColor(d, minimum, maximum, cmap) {
+    var c = null;
+    for(var j in cmap) {
+        var mn = cmap[j][0];
+        var mx = cmap[j][1];
+        if(mn != null && d <= mn) // color map is in order, this value must not be color mapped
+            break;
+        if(mx == null || d <= mx) {
+            if(mn == null)
+                mn = minimum;
+            if(mx == null)
+                mx = maximum;
+            var range = mx - mn;
+            var red = (cmap[j][3][0] - cmap[j][2][0]) * (d - mn)/range + cmap[j][2][0];
+            var green = (cmap[j][3][1] - cmap[j][2][1]) * (d - mn)/range + cmap[j][2][1];
+            var blue = (cmap[j][3][2] - cmap[j][2][2]) * (d - mn)/range + cmap[j][2][2];
+            var alpha = (cmap[j][3][3] - cmap[j][2][3]) * (d - mn)/range + cmap[j][2][3];
+            c = 'rgba(' + red + ',' + green + ',' + blue + ',' + alpha + ')';
+            break;
         }
     }
-    
-    this.error = function(msg) {
-        console.log(msg);
-    }
-    
-    this.update(-180, 180, 90, -90);
+    return c;
+}
+
+function callback(data) {
+    var left = data[0];
+    var right = data[1];
+    var top = data[2];
+    var bottom = data[3];
+    var xres = data[4];
+    var datatype = data[5];
+    data = data[6]; // the bulk of it
+    drawLayer(data, datatype, xres);
+}
+
+function error(msg) {
+    console.log(msg);
 }

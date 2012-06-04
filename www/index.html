@@ -7,19 +7,67 @@
 <script src='js/jquery-1.7.1.min.js'></script>
 <script src='js/main.js'></script>
 <script src='js/remote.js'></script>
+
+<!-- Google Maps API -->
+<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?sensor=false"></script>
+<script type="text/javascript" src="js/canvasmap.js"></script>
+
 </head>
 <body onload="init()">
-<h1>ccc-gistemp Map Viewer</h1>
-<canvas id='main_canvas' width='1000' height='500'></canvas>
-<br/>
-<!--<input type='button' class='btn' value="Draw Map" onclick='map.drawImage("img/land_1000x500.png")'/>-->
-<input type='button' class='btn' value="land" onclick='map.loadData("land", 144)'/>
-<input type='button' class='btn' value="topo" onclick='map.loadData("topo", 144)'/>
-<input type='button' class='btn' value="radiance" onclick='map.loadData("radiance", 144)'/>
-<input type='button' class='btn' value="coords" onclick="map.drawCoords()"/>
-<input type='button' class='btn' value="me" onclick="map.point(-79, 36)"/> <!-- Chapel Hill -->
-<input type='button' class='btn' value="topo_img" onclick="map.drawImage('img/topo_1000x500.png')"/>
-<input type='button' class='btn' value="radiance_img" onclick="map.drawImage('img/radiance_1000x500.png')"/>
-<div id='coords' style='font-family:helvetica'></div>
+
+    <div class='header'>
+        <div class='shader'></div>
+        <h1 style="padding-left: 20px; padding-right:20px;">ccc-gistemp Map Viewer</h1>
+    </div>
+
+    <div id='map' class='map_container'></div>
+
+    <div class='controls'>
+        <div class='shader'></div>
+        <br/>
+        <div style='float:left'> <!-- panning and zooming -->
+            <input type='button' class='btn' value='-' onclick='zoom(0.5)'/>
+            <input type='button' class='btn' value='+' onclick='zoom(2)'/>
+            <br/>
+            <input type='button' class='btn' value='up' onclick="pan(0, 0.5)"/>
+            <br/>
+            <input type='button' class='btn' value='left' onclick="pan(-0.5, 0)"/>
+            <input type='button' class='btn' value='right' onclick="pan(0.5, 0)"/>
+            <br/>
+            <input type='button' class='btn' value='down' onclick="pan(0, -0.5)"/>
+        </div>
+        <div style=''> <!-- data controls -->
+            Meta:
+            <input type='button' class='btn' value="clear" onclick='map.clear()'/>
+            <input type='button' class='btn' value="coords" onclick="map.drawDegrees(10, 2)"/>
+            <input type='button' class='btn' value="me" onclick="map.point(-79, 36)"/> <!-- Chapel Hill -->
+            <br/>
+            Data:
+            <input type='button' class='btn' value="land" onclick='getUniformData("land", 1)'/>
+            <input type='button' class='btn' value="topo" onclick='getUniformData("topo", 1)'/>
+            <input type='button' class='btn' value="radiance" onclick='getUniformData("radiance", 1)'/>
+            <input type='button' class='btn' value="country vectors" onclick="getVectorData('static/country.110.json', 2, 'country.110');"/>
+            <input type='button' class='btn' value="land vectors" onclick="getVectorData('static/land.110.json', 2, 'land.110');"/>
+            Images:
+            <input type='button' class='btn' value="topo" onclick="getImage('topo', 1)"/>
+            <input type='button' class='btn' value="radiance" onclick="getImage('radiance', 1)"/>
+            <br/>
+            2010:
+            <input type='button' class='btn' value="ocean input" onclick='getGridData("ost2010", 1)'/>
+            <input type='button' class='btn' value="land merged" onclick='getGridData("lt2010", 1)'/>
+            <input type='button' class='btn' value="land mask" onclick='getGridData("landmask", 1)'/>
+            <input type='button' class='btn' value="mixed final" onclick='getGridData("mixed.2010", 1)'/>
+            <br/>
+            1880 <input type="range" value='2010' min="1880" max="2010" class='slider' id='yearSlider' onchange="drawYear(this.value-FIRSTYEAR); $('#currYear').text(this.value);"/> 2010
+            [<div style='display:inline' id='currYear'>2010</div>]
+            <input type='button' class='btn' value='animate' onclick='animate("mixed", 1880, 2010, "grid")'/>
+        </div>
+
+        <a href='http://climatecode.org/' style='text-decoration: none;'>Climate Code Foundation</a> &copy; 2012
+        <br/>
+    </div>
+
+    <div id='debug'></div>
+
 </body>
 </html>

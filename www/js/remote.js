@@ -42,16 +42,40 @@ function AJAX(script, handler, params) {
     xmlhttp.send(data);
 }
 
+function JSON(script, handler, params) {
+    var xmlhttp;
+    if (window.XMLHttpRequest) { // IE7+, Firefox, Chrome, Opera, Safari
+        xmlhttp = new XMLHttpRequest();
+    }
+    else { // IE5,6
+        xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+    }
+    xmlhttp.onreadystatechange=function(){
+        if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+            var response = xmlhttp.responseText;
+            if(response.length > 0)
+                handler.callback(eval('data = ' + xmlhttp.responseText));
+            else
+                handler.error('Empty response');
+        }
+        else if(xmlhttp.readyState == 4) {
+            handler.error('Error: ' + xmlhttp.status);
+        }
+    }
+    xmlhttp.open("GET", script, true);
+    xmlhttp.setRequestHeader("Content-type", "text/html");
+    xmlhttp.send();
+}
+
 function RPC(script, handler, params) {
     var tmp_handler = new function() {
         this.callback = function (response) {
-            console.log(response);
             try {
                 var data = null;
                 eval('data = ' + response);
             }
             catch(err) {
-                handler.error('Error: ' + err);
+                handler.error('Error: ' + response);
                 return;
             }
             handler.callback(data);
