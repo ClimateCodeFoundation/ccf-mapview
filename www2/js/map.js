@@ -192,6 +192,23 @@ function CanvasMap(container, zoom) {
     this.resize(); // adjust for window size at startup
  
     $(window).resize(attacher(this, this.resize));
+    
+    // load 8k grid data
+    // make this more elegant... later
+    var handle = {
+        'callback': attacher(this, function(data) {
+            this.grid = [];
+            for(var d in data) {
+                // coords come in the form [s, n, w, e]
+                this.grid.push([data[d][0]/10, data[d][2]/10, data[d][1]/10, data[d][3]/10]);
+                // convert to [s, w, n, e]
+            }
+        }),
+        'error': function(msg) {
+            console.log(msg);
+        }
+    };
+    JSON('data/grid.json', handle, {});
 }
 
 
@@ -231,7 +248,7 @@ function ControlLayer(map, container) {
 function Layer(map, container) {
     this.$canvas = $('<canvas>');
     this.$canvas.addClass('layer');
-    $(container).insertBefore(this.$canvas, map.control_layer.$canvas);
+    this.$canvas.insertBefore(map.control_layer.$canvas);
     this.$canvas.attr('width', this.$canvas.width());
     this.$canvas.attr('height', this.$canvas.height());
     this.ctx = this.$canvas.get(0).getContext('2d');
@@ -264,8 +281,14 @@ function Layer(map, container) {
     }
     
     this.load = function(data, index, res) {
-        var style = this.sets[index][1];
-        this.data[index][res] = new VectorData(res, data, style);
+        var datatype = this.sets[index][0];
+        var style = this.sets[index][2];
+        if(datatype == 'vector')
+            this.data[index][res] = new VectorData(res, data, style);
+        else if(datatype == 'uniform')
+            this.data[index][res] = new UniformData(res, data, style);
+        else if(datatype == 'grid')
+            this.data[index][res] = new GridData(res, data, style, this.map.grid);
         this.loading[index] = false;
         this.clear();
         this.render();
@@ -391,6 +414,9 @@ function VectorData(res, data, style) {
     this.render = function(map, ctx) {
         //var m = 0;
         //var colors = ['#FF0000', '#FF7700', '#FFFF00', '#00FF00', '#00FFFF', '#0000FF', '#FF00FF'];
+        for(var s in style) {
+            ctx[s] = style[s];
+        }
         for(var d in data) {
             var bbox = data[d][0];
             if(outOfBounds(bbox, map)) {
@@ -406,9 +432,6 @@ function VectorData(res, data, style) {
                     ctx.lineTo(coords[0], map.height - coords[1]);
                 }
             }
-            for(var s in style) {
-                ctx[s] = style[s];
-            }
             if(style.fillStyle) {
                 ctx.fill();
             }
@@ -421,23 +444,21 @@ function VectorData(res, data, style) {
 
 
 // drawn on 8k grid
-function GridData(res, data, style) {
-    var grid = meta[0];
-    
+function GridData(res, data, style, grid) {
     var range = computeRange(data);
     this.render = function(map, ctx) {
         for(var i = 0; i < data.length; i++) {
-            if(data[i] == NODATA || outOfBounds(grid[i], map))
+            if(data[i] == NODATA || outOfBounds([grid[i][1], grid[i][0], grid[i][3], grid[i][2]], map))
                 continue; // no data
             var c = mapColor(data[i], range[0], range[1], style.colorMap);
             if(c != null)
                 this.drawRect(grid[i], c, map, ctx);
         }
     }
-    this.drawRect = function(coords, color, map, ctx) { // coords = [s, n, w, e]
+    this.drawRect = function(coords, color, map, ctx) {
         ctx.fillStyle = color;
-        var start = map.coord(coords[2]/10, coords[1]/10);
-        var end = map.coord(coords[3]/10, coords[0]/10);
+        var start = map.coord(coords[1], coords[2]);
+        var end = map.coord(coords[3], coords[0]);
         ctx.fillRect(start[0], map.height- start[1], end[0] - start[0], start[1] - end[1]);
     }
 }
@@ -445,19 +466,20 @@ function GridData(res, data, style) {
 
 // drawn in a perfect uniform grid
 function UniformData(res, data, style) {
-    var cols = data[0];
-    var block_size = 360 / cols; // unit box w/h in degrees
-    data = data[1];
+    var rows = data.length;
+    var cols = data[0].length;
+    var degperblock = 360 / cols; // unit box w/h in degrees
+    var root = [-180, 90];
     
     var range = computeRange(data);
     this.render = function(map, ctx) {
         for(var i = 0; i < data.length; i++) {
             for(var j = 0; j < data[i].length; j++) {
-                var x = coords[0] + j * block_size;
-                var y = coords[1] - i * block_size; // subtract here because we start in the NW corner moving down
-                if(outOfBounds([y-block_size, y, x, x+block_size], map))
+                var x = root[0] + j * degperblock;
+                var y = root[1] - i * degperblock; // subtract here because we start in the NW corner moving down
+                if(outOfBounds([x, y-degperblock, x+degperblock, y], map))
                     continue;
-                var block_width = map.zoom * block_size;
+                var block_width = map.zoom * degperblock;
                 var pos = map.coord(x, y);
                 var c = mapColor(data[i][j], range[0], range[1], style.colorMap);
                 if(c != null) {

@@ -1,8 +1,7 @@
-POLYGON = 0;
-POLYLINE = 1;
+NODATA = 9999;
 
 // this is the order the layers will be shown, from bottom to top
-LAYERS = ['land', 'glaciers', 'topo', 'rivers', 'lakes', 'countries', 'radiance', 'coordinates'];//, 'climate'];
+LAYERS = ['land', 'glaciers', 'topo', 'rivers', 'lakes', 'countries', 'radiance', 'coordinates', 'ost2010', 'lt2010', 'mixed2010'];//, 'climate'];
 
 FAR = 0
 MEDIUM = 16
@@ -11,7 +10,7 @@ CLOSE = 80
 DATA = { // id: [[[resolution, filepath], [resolution, filepath], ...], fillcolor, outlinecolor, outlineonly, dontclose] - ...false, false is a normal filled polygon
     'land':     [
                     [
-                        'json',
+                        'vector',
                         [
                             [FAR, 'data/land.110.json'],
                             [MEDIUM, 'data/land.50.json'],
@@ -22,29 +21,29 @@ DATA = { // id: [[[resolution, filepath], [resolution, filepath], ...], fillcolo
                 ], // #202020 light greenish
     'rivers':   [
                     [
-                        'json',
+                        'vector',
                         [
                             [FAR, 'data/rivers.110.json'],
                             [MEDIUM, 'data/rivers.50.json'],
                             [CLOSE, 'data/rivers.10.json']
                         ],
-                        { strokeStyle: '#0000FF', lineWidth: '0.5' }
+                        { strokeStyle: '#0000FF', lineWidth: 0.5 }
                     ]
                 ], // #9DC3E0 blue
     'lakes':    [
                     [
-                        'json',
+                        'vector',
                         [
                             [FAR, 'data/lakes.110.json'],
                             [MEDIUM, 'data/lakes.50.json'],
                             [CLOSE, 'data/lakes.10.json']
                         ],
-                        { fillStyle: '#0000FF', strokeStyle: '#AAAAFF', lineWidth: '0.5' }
+                        { fillStyle: '#0000FF', strokeStyle: '#AAAAFF', lineWidth: 0.5 }
                     ]
                 ], // #9DC3E0 blue
     'glaciers': [
                     [
-                        'json',
+                        'vector',
                         [
                             [FAR, 'data/glaciers.110.json'],
                             [MEDIUM, 'data/glaciers.50.json'],
@@ -55,13 +54,13 @@ DATA = { // id: [[[resolution, filepath], [resolution, filepath], ...], fillcolo
                 ], // very light blue (blue-white, ice)
     'countries':[
                     [
-                        'json',
+                        'vector',
                         [
                             [FAR, 'data/countries.110.json'],
                             [MEDIUM, 'data/countries.50.json'],
                             [CLOSE, 'data/countries.10.json']
                         ],
-                        { strokeStyle: '#FFFFFF', lineWidth: '1.0' }
+                        { strokeStyle: '#FFFFFF', lineWidth: 1.0 }
                     ]
                 ], //#000000
     
@@ -73,7 +72,7 @@ DATA = { // id: [[[resolution, filepath], [resolution, filepath], ...], fillcolo
                             [MEDIUM, 'data/topo.288.json'],
                             [CLOSE, 'data/topo.1440.json']
                         ],
-                        { colorMap: [[null, 0, [0,0,190,1], [0,0,190,0.5]], [0, null, [0,190,0,0.3], [0,190,0,1]]] }
+                        { colorMap: [[null, 0, [0,0,150,0.5], [100,100,255,0.5]], [0, null, [100,255,100,0.5], [100,50,0,0.5]]] }
                     ]
                 ],
     'radiance': [
@@ -129,11 +128,11 @@ DATA = { // id: [[[resolution, filepath], [resolution, filepath], ...], fillcolo
     */
     'coordinates': [
                     [
-                        'json',
+                        'vector',
                         [
                             [FAR, 'data/latlon.10.json']
                         ],
-                        { strokeStyle: '#000000', lineWidth: '0.5' }
+                        { strokeStyle: '#000000', lineWidth: 0.5 }
                     ]
                 ]
 }
@@ -204,4 +203,56 @@ function zoom(z) {
 
 function pan(x, y) {
     map.pan(x, y);
+}
+
+// this is a supporting method to map values within a range
+// to a fixed set of colors
+function mapColor(d, minimum, maximum, cmap) {
+    var c = null;
+    for(var j in cmap) {
+        var mn = cmap[j][0];
+        var mx = cmap[j][1];
+        if(mn != null && d <= mn) // color map is in order, this value must not be color mapped
+            break;
+        if(mx == null || d <= mx) {
+            if(mn == null)
+                mn = minimum;
+            if(mx == null)
+                mx = maximum;
+            var range = mx - mn;
+            var red = (cmap[j][3][0] - cmap[j][2][0]) * (d - mn)/range + cmap[j][2][0];
+            var green = (cmap[j][3][1] - cmap[j][2][1]) * (d - mn)/range + cmap[j][2][1];
+            var blue = (cmap[j][3][2] - cmap[j][2][2]) * (d - mn)/range + cmap[j][2][2];
+            var alpha = (cmap[j][3][3] - cmap[j][2][3]) * (d - mn)/range + cmap[j][2][3];
+            c = 'rgba(' + red + ',' + green + ',' + blue + ',' + alpha + ')';
+            break;
+        }
+    }
+    return c;
+}
+
+// another supporting method
+// computes range (maximum and minimum) of data
+// returns [minimum, maximum]
+// given data as a 1D or 2D array (of numbers)
+function computeRange(data) {
+    var maximum = null;
+    var minimum = null;
+    for(var i = 0; i < data.length; i++) {
+        if(data[i] instanceof Array) {
+            for(var j = 0; j < data[i].length; j++) {
+                if(data[i][j] != NODATA && (maximum == null || data[i][j] > maximum))
+                    maximum = data[i][j];
+                if(minimum == null || data[i][j] < minimum)
+                    minimum = data[i][j];
+            }
+        }
+        else {
+            if(data[i] != NODATA && (maximum == null || data[i] > maximum))
+                maximum = data[i];
+            if(minimum == null || data[i] < minimum)
+                minimum = data[i];
+        }
+    }
+    return [minimum, maximum];
 }
