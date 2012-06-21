@@ -1,7 +1,11 @@
+/*
+ Copyright (c) 2012 Climate Code Foundation (climatecode.org)
+ Licensed under the MIT License (LICENSE.txt)
+ 
+ Version 0.1.0
+*/
+
 // ------------------------------------------------
-// 2/22/2012
-// Jeremy Wang
-// 
 // Carry out AJAX remote procedure calls
 // to retrieve data
 // ------------------------------------------------

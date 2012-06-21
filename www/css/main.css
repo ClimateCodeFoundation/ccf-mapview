@@ -1,3 +1,10 @@
+/*
+ Copyright (c) 2012 Climate Code Foundation (climatecode.org)
+ Licensed under the MIT License (LICENSE.txt)
+ 
+ Version 0.1.0
+*/
+
 html {
     height: 100%;
 }
@@ -18,6 +25,7 @@ body {
     width: 100%;
     overflow: hidden;
     z-index: 0;
+    background-color: #AABBFF; /* this will be the ocean base background color */
 }
 
 canvas.layer {
@@ -38,6 +46,12 @@ canvas.layer {
     cursor: pointer;
     border-radius: 10px;
     padding: 5px;
+    display: inline-block;
+}
+
+.btn-selected {
+    background-color: #333333;
+    color: #FFFFFF;
 }
 
 .header {
@@ -51,13 +65,54 @@ canvas.layer {
     z-index: 1;
 }
 
-.controls {
-    text-align:center;
+.header-text {
+    padding: 10px;
+}
+
+.debug {
+    font-family: monospace;
+    color: #00FF00;
+    text-align: center;
+    margin: auto;
+    margin-bottom: 5px;
     position: absolute;
     bottom: 0px;
-    width: 100%;
+    right: 0px;
     display: inline;
     z-index: 1;
+}
+
+.debug-text {
+    padding: 10px;
+}
+
+.dark-shader {
+    position: absolute;
+    display: block;
+    width: 100%;
+    height: 100%;
+    background-color: #000000;
+    opacity: 0.7;
+    filter: alpha(opacity=70);
+    z-index: -1;
+    border: 1px solid #CCCCCC;
+}
+
+.controls {
+    text-align:left;
+    position: absolute;
+    left: 0px;
+    height: 100%;
+    display: inline;
+    z-index: 1;
+}
+
+.control-nav {
+    margin: 10px;
+}
+
+.control-data {
+    margin: 10px;
 }
 
 .shader {
@@ -69,8 +124,52 @@ canvas.layer {
     opacity: 0.7;
     filter: alpha(opacity=70);
     z-index: -1;
+    border: 1px solid #CCCCCC;
 }
 
 .slider {
-    width: 300px;
+    width: 150px;
+}
+
+.res {
+    background-color: #FFCCCC;
+    border: 1px solid #CCCCCC;
+    color: #333333;
+    border-radius: 10px;
+    padding: 5px;
+    display: inline-block;
+}
+
+.res-loading {
+    background-color: #CCCCFF;
+}
+
+.res-loaded {
+    background-color: #CCFFCC;
+}
+
+.res-active {
+    font-weight: bold;
+}
+
+.link {
+    color: blue;
+    cursor: pointer;
+    display: inline;
+}
+
+.popup {
+    width: 400px;
+    font-family: helvetica;
+    display: none;
+    text-align: left;
+    margin: 10px;
+}
+
+.dataList {
+    display: inline-block;
+    height: 200px;
+    width: 200px;
+    overflow-y: hidden;
+    overflow-x: visible;
 }

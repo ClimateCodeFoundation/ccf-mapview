@@ -1,23 +1,57 @@
 <!DOCTYPE html>
 <head>
-<title>ccc-gistemp Map Viewer</title>
+<title>CCF MapView</title>
 <link href='css/main.css' rel='stylesheet'/>
+<link href='img/globe_tiny.png' rel='icon'/>
 <!-- Google font -->
 <link href='http://fonts.googleapis.com/css?family=Special+Elite' rel='stylesheet' type='text/css'>
 <script src='js/jquery-1.7.1.min.js'></script>
+<script src='js/jquery.mousewheel.js'></script>
 <script src='js/main.js'></script>
 <script src='js/remote.js'></script>
-
-<!-- Google Maps API -->
-<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?sensor=false"></script>
-<script type="text/javascript" src="js/canvasmap.js"></script>
+<script type="text/javascript" src="js/map.js"></script>
 
 </head>
 <body onload="init()">
 
     <div class='header'>
         <div class='shader'></div>
-        <h1 style="padding-left: 20px; padding-right:20px;">ccc-gistemp Map Viewer</h1>
+        <div class='header-text'>
+            <h1 style="padding-left: 20px; padding-right:20px;">CCF MapView</h1>
+            Climate Code Foundation
+            <br/>
+            <br/>
+            <div onclick='toggle_box(this, "about")' class='link' id='more'>&lt; More</div>
+            <div id='about' class='popup'>
+                This is a map visualization of the <a href='http://climatecode.org/' target='_blank'>Climate Code Foundation</a>'s implementation of the NASA Goddard Institute for Space Studies (GISS) Surface Temperature Analysis (<a href='http://data.giss.nasa.gov/gistemp/' target='_blank'>GISTEMP<a/>). This code is <a href='http://code.google.com/p/ccc-gistemp/' target='_blank'>ccc-gistemp</a>.
+                <br/>
+                <br/>
+                This project is open source under the MIT License and available at <a href='http://code.google.com/p/ccf-mapview' target='_blank'>code.google.com/p/ccf-mapview</a>. We use <a href='http://www.naturalearthdata.com' target='_blank'>Natural Earth Data</a>, which is a great resource and in the public domain. Parts of the rendering were inspired by <a href='https://github.com/RandomEtc/shapefile-js' target='_blank'>shapefile-js</a>.
+                <br/>
+                <br/>
+                <a href='http://www.naturalearthdata.com' target='_blank'><img src='img/NED_logo.png' style='width: 180px'/></a>
+            </div>
+        </div>
+    </div>
+    
+    <div class='debug'>
+        <div class='dark-shader'></div>
+        <div class='debug-text'>
+            [ <div onclick='toggle_box(this, "debug")' id='more' style='display:inline; cursor:pointer'>debug</div> ]
+            <br/>
+            <br/>
+            <div id='debug' class='popup' style='font-family: monospace'>
+                &gt; [ <div style='display:inline; cursor:pointer;' onclick='map.toggle8kGrid()'>Draw 8k sub-box grid</div> ]
+                <br/>
+                <br/>
+                &gt; bytes loaded: <div id='numBytes' style="display: inline-block">0</div>
+                <br/>
+                <br/>
+                <div id='loadingBox' class='dataList'>
+                <div id='dataLoaded'></div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div id='map' class='map_container'></div>
@@ -25,49 +59,48 @@
     <div class='controls'>
         <div class='shader'></div>
         <br/>
-        <div style='float:left'> <!-- panning and zooming -->
-            <input type='button' class='btn' value='-' onclick='zoom(0.5)'/>
-            <input type='button' class='btn' value='+' onclick='zoom(2)'/>
+        <div class='control-nav'> <!-- panning and zooming -->
+            <div class='btn' onclick='zoom(2)'>+</div>
+            <div class='btn' onclick='zoom(0.5)'>-</div>
+            <div id='zoom' style="display: inline-block">4</div>x
             <br/>
-            <input type='button' class='btn' value='up' onclick="pan(0, 0.5)"/>
-            <br/>
-            <input type='button' class='btn' value='left' onclick="pan(-0.5, 0)"/>
-            <input type='button' class='btn' value='right' onclick="pan(0.5, 0)"/>
-            <br/>
-            <input type='button' class='btn' value='down' onclick="pan(0, -0.5)"/>
+            <div class='btn' onclick="pan(0, 0.5)">up</div>
+            <div class='btn' onclick="pan(-0.5, 0)">left</div>
+            <div class='btn' onclick="pan(0.5, 0)">right</div>
+            <div class='btn' onclick="pan(0, -0.5)">down</div>
         </div>
-        <div style=''> <!-- data controls -->
-            Meta:
-            <input type='button' class='btn' value="clear" onclick='map.clear()'/>
-            <input type='button' class='btn' value="coords" onclick="map.drawDegrees(10, 2)"/>
-            <input type='button' class='btn' value="me" onclick="map.point(-79, 36)"/> <!-- Chapel Hill -->
+        <div class='control-data'> <!-- data controls -->
+            <br/>
+            <div class='btn' onclick="toggle(this, 'coordinates')">Coordinates</div>
+            <br/>
             <br/>
             Data:
-            <input type='button' class='btn' value="land" onclick='getUniformData("land", 1)'/>
-            <input type='button' class='btn' value="topo" onclick='getUniformData("topo", 1)'/>
-            <input type='button' class='btn' value="radiance" onclick='getUniformData("radiance", 1)'/>
-            <input type='button' class='btn' value="country vectors" onclick="getVectorData('static/country.110.json', 2, 'country.110');"/>
-            <input type='button' class='btn' value="land vectors" onclick="getVectorData('static/land.110.json', 2, 'land.110');"/>
-            Images:
-            <input type='button' class='btn' value="topo" onclick="getImage('topo', 1)"/>
-            <input type='button' class='btn' value="radiance" onclick="getImage('radiance', 1)"/>
             <br/>
-            2010:
-            <input type='button' class='btn' value="ocean input" onclick='getGridData("ost2010", 1)'/>
-            <input type='button' class='btn' value="land merged" onclick='getGridData("lt2010", 1)'/>
-            <input type='button' class='btn' value="land mask" onclick='getGridData("landmask", 1)'/>
-            <input type='button' class='btn' value="mixed final" onclick='getGridData("mixed.2010", 1)'/>
+            <div class='btn' onclick="toggle(this, 'topo')">topography</div>
             <br/>
-            1880 <input type="range" value='2010' min="1880" max="2010" class='slider' id='yearSlider' onchange="drawYear(this.value-FIRSTYEAR); $('#currYear').text(this.value);"/> 2010
-            [<div style='display:inline' id='currYear'>2010</div>]
-            <input type='button' class='btn' value='animate' onclick='animate("mixed", 1880, 2010, "grid")'/>
+            <div class='btn' onclick="toggle(this, 'radiance')">night light radiance</div>
+            <br/>
+            <br/>
+            Intermediate steps [2010]:
+            <br/>
+            <div class='btn' onclick="toggle(this, 'ost2010')">ocean input</div>
+            <br/>
+            <div class='btn' onclick="toggle(this, 'lt2010')">land merged</div>
+            <br/>
+            <div class='btn' onclick="toggle(this, 'landmask')">land mask</div>
+            <br/>
+            <br/>
+            <input type="range" id='year' min="1880" max="2010" value='1880' class='slider' onchange='updateYear()'/>
+            <br/>
+            <div class='btn' onclick="if($('#year').val() > 1880){ $('#year').val(parseInt($('#year').val())-1); updateYear(); }">&lt;</div>
+            <div class='btn' onclick="if($('#year').val() < 2010){ $('#year').val(parseInt($('#year').val())+1); updateYear(); }">&gt;</div>
+            <br/>
+            Ocean: <div id='oceanBtn' class='btn' onclick="toggle(this, 'oceanTemp')">1880</div>
+            <br/>
+            Land: <div id='landBtn' class='btn' onclick="toggle(this, 'landTemp')">1880</div>
+            <br/>
+            Mixed: <div id='mixedBtn' class='btn' onclick="toggle(this, 'mixedTemp')">1880</div>
         </div>
-
-        <a href='http://climatecode.org/' style='text-decoration: none;'>Climate Code Foundation</a> &copy; 2012
-        <br/>
     </div>
-
-    <div id='debug'></div>
-
 </body>
 </html>

@@ -1,45 +1,232 @@
-BLOCKS = { // [displayName, fileName, startYear, endYear, resolution, colorMap]
-            "land": ["land", 144, [-180, 90], 2.5, [[0, null, [160,160,160,1], [160,160,160,1]]]], // 144 columns, rooted at 180W, 90N, 2.5 degrees unit squares
-            "topo": ["topo", 144, [-180, 90], 2.5, [[null, 0, [0,0,190,1], [0,0,190,0.5]], [0, null, [0,190,0,0.3], [0,190,0,1]]]],
-            "radiance": ["radiance", 144, [-180, 90], 2.5, [[0, null, [255,0,0,0.3], [255,0,0,1]]]],
-};
+/*
+ Copyright (c) 2012 Climate Code Foundation (climatecode.org)
+ Licensed under the MIT License (LICENSE.txt)
+ 
+ Version 0.1.0
+*/
 
-GRIDS = {
-         "ost2010": ["ocean input", 2010, 2010, "grid", [[null, 0, [0, 0, 255, 1], [0, 0, 255, 0.3]], [0, null, [255, 0, 0, 0.3], [255, 0, 0, 1]]]],
-         "lt2010": ["land merged", 2010, 2010, "grid", [[null, 0, [0, 0, 255, 1], [0, 0, 255, 0.3]], [0, null, [255, 0, 0, 0.3], [255, 0, 0, 1]]]],
-         "landmask": ["land mask", 2010, 2010, "grid", [[0, null, [0,0,0,0.3], [0,0,0,0.3]]]],
-         "mixed.2010": ["mixed final", 2010, 2010, "grid", [[null, 0, [0, 0, 255, 1], [0, 0, 255, 0.3]], [0, null, [255, 0, 0, 0.3], [255, 0, 0, 1]]]]
-};
+NODATA = 9999;
 
-//            "land": ["land", 1880, 2010, "grid", [[null, 0, [0, 0, 255, 1], [0, 0, 255, 0.3]], [0, null, [255, 0, 0, 0.3], [255, 0, 0, 1]]]],
-//            "ocean": ["ocean", 1880, 2010, "grid", [[null, 0, [0, 0, 255, 1], [0, 0, 255, 0.3]], [0, null, [255, 0, 0, 0.3], [255, 0, 0, 1]]]],
-//            "mixed": ["mixed", 1880, 2010, "grid", [[null, 0, [0, 0, 255, 1], [0, 0, 255, 0.3]], [0, null, [255, 0, 0, 0.3], [255, 0, 0, 1]]]]
+// this is the order the layers will be shown, from bottom to top
+LAYERS = ['land', 'glaciers', 'topo', 'rivers', 'lakes', 'countries', 'radiance', 'coordinates', 'landmask', 'ost2010', 'lt2010', 'mixed2010', 'oceanTemp', 'landTemp', 'mixedTemp'];// 'climate'];
 
-// color map: [start, end, start color, end color] where value are mapped in (start, end] (including the end but not the start)
-//            except for null (minimum), which is included
+FAR = 0
+MEDIUM = 16
+CLOSE = 80
 
-TEMPCOLORMAP = [[null, 0, [0, 0, 255, 1], [0, 0, 255, 0.3]], [0, null, [255, 0, 0, 0.3], [255, 0, 0, 1]]];
+// construct timeseries data
+ocean_years = {}
+land_years = {}
+mixed_years = {}
+for(var i = 1880; i < 2011; i++) {
+    i = ''+i;
+    ocean_years[i] = 'data/ocean.' + i + '.grid.json';
+    land_years[i] = 'data/land.' + i + '.grid.json';
+    mixed_years[i] = 'data/mixed.' + i + '.grid.json';
+}
 
-IMAGES = {
-          "topo": ["img/topo_1000x500.png", [-180, 90]],
-          "radiance": ["img/radiance_1000x500.png", [-180, 90]],
-          "border": ["img/border2_1000x500.png", [-180, 90]]
-};
+TEMPCOLOR = [[null, 0, [0, 0, 180, 0.7], [100, 100, 255, 0.7]], [0, null, [255, 100, 100, 0.7], [180, 0, 0, 0.7]]];
 
-FIRSTYEAR = 1880;
-LASTYEAR = 2010;
+DATA = { // id: [[[resolution, filepath], [resolution, filepath], ...], fillcolor, outlinecolor, outlineonly, dontclose] - ...false, false is a normal filled polygon
+    'land':     [
+                    [
+                        'single',
+                        'vector',
+                        [
+                            [FAR, 'data/land.110.json'],
+                            [MEDIUM, 'data/land.50.json'],
+                            [CLOSE, 'data/land.10.json']
+                        ],
+                        { fillStyle: '#99AA77' }
+                    ]
+                ], // #202020 light greenish
+    'rivers':   [
+                    [
+                        'single',
+                        'vector',
+                        [
+                            [FAR, 'data/rivers.110.json'],
+                            [MEDIUM, 'data/rivers.50.json'],
+                            [CLOSE, 'data/rivers.10.json']
+                        ],
+                        { strokeStyle: '#0000FF', lineWidth: 0.5 }
+                    ]
+                ], // #9DC3E0 blue
+    'lakes':    [
+                    [
+                        'single',
+                        'vector',
+                        [
+                            [FAR, 'data/lakes.110.json'],
+                            [MEDIUM, 'data/lakes.50.json'],
+                            [CLOSE, 'data/lakes.10.json']
+                        ],
+                        { fillStyle: '#0000FF', strokeStyle: '#AAAAFF', lineWidth: 0.5 }
+                    ]
+                ], // #9DC3E0 blue
+    'glaciers': [
+                    [
+                        'single',
+                        'vector',
+                        [
+                            [FAR, 'data/glaciers.110.json'],
+                            [MEDIUM, 'data/glaciers.50.json'],
+                            [CLOSE, 'data/glaciers.10.json']
+                        ],
+                        { fillStyle: '#DDDDFF' }
+                    ]
+                ], // very light blue (blue-white, ice)
+    'countries':[
+                    [
+                        'single',
+                        'vector',
+                        [
+                            [FAR, 'data/countries.110.json'],
+                            [MEDIUM, 'data/countries.50.json'],
+                            [CLOSE, 'data/countries.10.json']
+                        ],
+                        { strokeStyle: '#FFFFFF', lineWidth: 1.0 }
+                    ]
+                ], //#000000
+    
+    'topo':     [
+                    [
+                        'single',
+                        'uniform',
+                        [
+                            [FAR, 'data/topo.144.json'],
+                            [MEDIUM, 'data/topo.288.json'],
+                            [CLOSE, 'data/topo.1440.json']
+                        ],
+                        { colorMap: [[null, 0, [0,0,150,1], [100,100,255,1]], [0, null, [140,200,100,1], [100,50,0,1]]] }
+                    ]
+                ],
+    'radiance': [
+                    [
+                        'single',
+                        'uniform',
+                        [
+                            [FAR, 'data/radiance.144.json'],
+                            [MEDIUM, 'data/radiance.288.json'],
+                            [CLOSE, 'data/radiance.1440.json']
+                        ],
+                        { colorMap: [[0, null, [255,0,0,0.3], [255,0,0,1]]] }
+                    ]
+                ],
+    
+    'ost2010':  [
+                    [
+                        'single',
+                        'grid',
+                        [
+                            [FAR, 'data/ost2010.grid.json']
+                        ],
+                        { colorMap: TEMPCOLOR }
+                    ]
+                ],
+    'lt2010':   [
+                    [
+                        'single',
+                        'grid',
+                        [
+                            [FAR, 'data/lt2010.grid.json']
+                        ],
+                        { colorMap: TEMPCOLOR }
+                    ]
+                ],
+    'landmask': [
+                    [
+                        'single',
+                        'grid',
+                        [
+                            [FAR, 'data/landmask.grid.json']
+                        ],
+                        { colorMap: [[0, null, [0,0,0,0.0], [0,0,0,0.3]]] }
+                    ]
+                ],
+    /*
+    // this one is a set of time-series grid data - something different must be done
+    '1880-2010':[
+                    [
+                        'grid',
+                        [
+                            [FAR, 'data/mixed.1880.2010.grid.json']
+                        ],
+                        { colorMap: [[null, 0, [0, 0, 255, 1], [0, 0, 255, 0.3]], [0, null, [255, 0, 0, 0.3], [255, 0, 0, 1]]] }
+                    ]
+                ],
+    */
+    'coordinates': [
+                    [
+                        'single',
+                        'vector',
+                        [
+                            [FAR, 'data/latlon.10.json']
+                        ],
+                        { strokeStyle: '#000000', lineWidth: 0.5 }
+                    ]
+                ],
+    
+    'oceanTemp':  [
+                    [
+                        'timeseries',
+                        'grid',
+                        [
+                            [FAR, ocean_years]
+                        ],
+                        { colorMap: TEMPCOLOR }
+                    ],
+                ],
+    
+    'landTemp':  [
+                    [
+                        'timeseries',
+                        'grid',
+                        [
+                            [FAR, land_years]
+                        ],
+                        { colorMap: TEMPCOLOR }
+                    ]
+                ],
+    
+    'mixedTemp':  [
+                    [
+                        'timeseries',
+                        'grid',
+                        [
+                            [FAR, mixed_years]
+                        ],
+                        { colorMap: TEMPCOLOR }
+                    ]
+                ]
+}
 
-function event_attacher() {
-    var o = arguments[0];
-    var f = arguments[1];
-    var params = [];
-    for(var i = 2; i < arguments.length; i++)
-        params.push(arguments[i]);
-    return function(event) {
-        return f.call(o, event, params);
+function updateYear() {
+    var year = $('#year').val();
+    $('#oceanBtn').text(year);
+    $('#landBtn').text(year);
+    $('#mixedBtn').text(year);
+    map.changeLayer('oceanTemp', year);
+    map.changeLayer('landTemp', year);
+    map.changeLayer('mixedTemp', year);
+}
+
+function toggle_box(btn, id) {
+    var a = $('#' + id);
+    var $btn = $(btn);
+    if(!a.is(':visible')) {
+        a.show('slow');
+        if($btn.text() == '< More')
+            $btn.text('> Less');
+    }
+    else {
+        a.hide('slow');
+        if($btn.text() == '> Less')
+            $btn.text('< More');
     }
 }
 
+// a not-so-elegant but critical piece of scoping and closure
 function attacher() {
     var o = arguments[0];
     var f = arguments[1];
@@ -47,144 +234,56 @@ function attacher() {
     for(var i = 2; i < arguments.length; i++)
         params.push(arguments[i]);
     return function() {
+        var newparams = [];
         for(var i in arguments)
-            params.push(arguments[i]);
-        return f.apply(o, params);
+            newparams.push(arguments[i]);
+        return f.apply(o, params.concat(newparams));
     }
 }
 
-// 0-255 only
-function toHex(v) {
-    var hex = ['0', '1', '2', '3', '4', '5', ,'6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'];
-    return hex[Math.floor(v / 16)] + hex[Math.floor(v % 16)];
-}
-
 var map;
-var grid;
 
 function init() {
-    console.log('making map...');
     // start with 3 layers, zoom 4x (4 pixels per degree)
-    map = new CanvasMap(document.getElementById('map'), 3, 4); //(container, numLayers, zoom) where zoom indicates pixels per degree
-    // preload grid data, which will then go on to get more data
-    console.log('loading grid...');
-    getGrid();
-}
-
-function getGrid() {
-    var handle = {
-        'callback': attacher(this, function(data) {
-            grid = data; // we will keep this here (globally), not as a part of the map
-            moreData();
-        }),
-        'error': function(msg) {
-            console.log(msg);
-        }
-    };
-    RPC('services/grid.py', handle, {});
-}
-
-function moreData() {
-    console.log('loading more data...');
-    //getVectorData('static/land.110.json', 2, 'land.110'); // layer 2 (top)
-    //getGridData('mixed.2010', 1); // put it on layer 1 (the middle)
-    //map.load("img/radiance_1000x500.png", 'radiance_img', 'img', [-180, 90], 1); // middle layer
+    map = new CanvasMap(document.getElementById('map'), 4); //(container, numLayers, zoom) where zoom indicates pixels per degree
+    for(var i in LAYERS) {
+        var l = LAYERS[i];
+        map.addLayer(l, DATA[l]);
+    }
+    map.show('land');
+    map.show('rivers');
+    map.show('lakes');
+    map.show('glaciers');
+    map.show('countries');
     map.update();
+}
+
+// toggle data sets on and off
+function toggle(btn, datum) {
+    $btn = $(btn);
+    if($btn.hasClass('btn-selected')) {
+        if(map.hide(datum)) {
+            $btn.removeClass('btn-selected');
+        }
+    }
+    else {
+        if(map.show(datum)) {
+            $btn.addClass('btn-selected');
+        }
+    }
 }
 
 function zoom(z) {
     map.changeZoom(z);
+    $('#zoom').text(map.zoom.toFixed(0));
 }
 
 function pan(x, y) {
     map.pan(x, y);
 }
 
-function getVectorData(src, layer, id) {
-    var handle = {
-        'callback': attacher(this, function(data) {
-            map.load(data, id, 'vector', [], layer); // [] means there is no metadata
-            map.update(); // this will cause it to render
-        }),
-        'error': function(msg) {
-            console.log(msg);
-        }
-    };
-    JSON(src, handle, {});
-}
-    
-function getGridData(id, layer) {
-    var colormap = GRIDS[id][4];
-    var handle = {
-        'callback': attacher(this, function(data) {
-            map.load(data[6], id, 'grid', [grid, colormap], layer) // the rest of data is metadata
-            map.update();
-        }),
-        'error': function(msg) {
-            console.log(msg);
-        }
-    };
-    RPC('services/data.py', handle, {'data':id, 'left':map.w, 'right':map.e, 'top':map.n, 'bottom':map.s, 'xres':'grid'});
-}
-
-function getUniformData(id, layer) {
-    var cols = BLOCKS[id][1];
-    var coords = BLOCKS[id][2];
-    var block_size = BLOCKS[id][3];
-    var colormap = BLOCKS[id][4];
-    var handle = {
-        'callback': attacher(this, function(data) {
-            map.load(data[6], id, 'uniform', [cols, coords, block_size, colormap], layer) // the rest of data is metadata
-            map.update();
-        }),
-        'error': function(msg) {
-            console.log(msg);
-        }
-    };
-    RPC('services/data.py', handle, {'data':id, 'left':map.w, 'right':map.e, 'top':map.n, 'bottom':map.s, 'xres':cols});
-}
-
-function getImage(id, layer) {
-    var src = IMAGES[id][0];
-    var coords = IMAGES[id][1];
-    map.load(src, id, 'img', coords, layer);
-    map.update();
-}
-    
-function animate(dataset, start_year, end_year, res) {
-    loop(start_year - FIRSTYEAR);
-}
-    
-function loop(year) {
-    if(year >= map.nyears)
-        return;
-
-    $('#yearSlider').val(year+FIRSTYEAR);
-    $('#currYear').text(year+FIRSTYEAR);
-    
-    //var timer = new Date();
-    //var t0 = timer.getUTCMilliseconds();
-    drawYear(year, map.nyears);
-    //timer = new Date();
-    //var t1 = timer.getUTCMilliseconds();
-    //console.log('drawn ' + (year+1880) + ' in ' + (t1-t0) + 'e-3 s');
-    setTimeout(attacher(this, loop, year+1, map.nyears), 1);
-}
-    
-function drawYear(year) {
-    var grid = [];
-    for(var j = year; j < map.data.length; j+=map.nyears) {
-        grid.push(map.data[j]);
-    }
-    if(grid.length < GRIDCELLS)
-        console.log('year ' + (year+FIRSTYEAR) + ' too short');
-    else {
-        map.clear();
-        //console.log('drawing ' + (year+FIRSTYEAR))
-        drawLayer(grid, 'mixed', 'grid');
-    }
-}
-    
+// this is a supporting method to map values within a range
+// to a fixed set of colors
 function mapColor(d, minimum, maximum, cmap) {
     var c = null;
     for(var j in cmap) {
@@ -198,28 +297,40 @@ function mapColor(d, minimum, maximum, cmap) {
             if(mx == null)
                 mx = maximum;
             var range = mx - mn;
-            var red = (cmap[j][3][0] - cmap[j][2][0]) * (d - mn)/range + cmap[j][2][0];
-            var green = (cmap[j][3][1] - cmap[j][2][1]) * (d - mn)/range + cmap[j][2][1];
-            var blue = (cmap[j][3][2] - cmap[j][2][2]) * (d - mn)/range + cmap[j][2][2];
-            var alpha = (cmap[j][3][3] - cmap[j][2][3]) * (d - mn)/range + cmap[j][2][3];
-            c = 'rgba(' + red + ',' + green + ',' + blue + ',' + alpha + ')';
+            var fraction = (d - mn)/range;
+            var red = (cmap[j][3][0] - cmap[j][2][0]) * fraction + cmap[j][2][0];
+            var green = (cmap[j][3][1] - cmap[j][2][1]) * fraction + cmap[j][2][1];
+            var blue = (cmap[j][3][2] - cmap[j][2][2]) * fraction + cmap[j][2][2];
+            var alpha = (cmap[j][3][3] - cmap[j][2][3]) * fraction + cmap[j][2][3];
+            c = 'rgba(' + red.toFixed(0) + ',' + green.toFixed(0) + ',' + blue.toFixed(0) + ',' + alpha.toFixed(2) + ')';
             break;
         }
     }
     return c;
 }
 
-function callback(data) {
-    var left = data[0];
-    var right = data[1];
-    var top = data[2];
-    var bottom = data[3];
-    var xres = data[4];
-    var datatype = data[5];
-    data = data[6]; // the bulk of it
-    drawLayer(data, datatype, xres);
-}
-
-function error(msg) {
-    console.log(msg);
+// another supporting method
+// computes range (maximum and minimum) of data
+// returns [minimum, maximum]
+// given data as a 1D or 2D array (of numbers)
+function computeRange(data) {
+    var maximum = null;
+    var minimum = null;
+    for(var i = 0; i < data.length; i++) {
+        if(data[i] instanceof Array) {
+            for(var j = 0; j < data[i].length; j++) {
+                if(data[i][j] != NODATA && (maximum == null || data[i][j] > maximum))
+                    maximum = data[i][j];
+                if(minimum == null || data[i][j] < minimum)
+                    minimum = data[i][j];
+            }
+        }
+        else {
+            if(data[i] != NODATA && (maximum == null || data[i] > maximum))
+                maximum = data[i];
+            if(minimum == null || data[i] < minimum)
+                minimum = data[i];
+        }
+    }
+    return [minimum, maximum];
 }
