@@ -8,7 +8,7 @@
 NODATA = 9999;
 
 // this is the order the layers will be shown, from bottom to top
-LAYERS = ['land', 'glaciers', 'topo', 'rivers', 'lakes', 'countries', 'radiance', 'coordinates', 'landmask', 'ost2010', 'lt2010', 'mixed2010', 'oceanTemp', 'landTemp', 'mixedTemp'];// 'climate'];
+LAYERS = ['land', 'glaciers', 'topo', 'rivers', 'lakes', 'countries', 'radiance', 'coordinates', 'landmask', 'ost2010', 'lt2010', 'mixed2010', 'oceanTemp', 'landTemp', 'mixedTemp', 'pointTest', 'populated'];// 'climate'];
 
 FAR = 0
 MEDIUM = 16
@@ -198,17 +198,29 @@ DATA = { // id: [[[resolution, filepath], [resolution, filepath], ...], fillcolo
                         ],
                         { colorMap: TEMPCOLOR }
                     ]
-                ]
-}
-
-function updateYear() {
-    var year = $('#year').val();
-    $('#oceanBtn').text(year);
-    $('#landBtn').text(year);
-    $('#mixedBtn').text(year);
-    map.changeLayer('oceanTemp', year);
-    map.changeLayer('landTemp', year);
-    map.changeLayer('mixedTemp', year);
+                ],
+    
+    'pointTest':  [
+                    [
+                        'single',
+                        'point',
+                        [
+                            [FAR, 'data/a_point_test_data.json']
+                        ],
+                        { strokeStyle: '#000000', fillStyle: '#FF0000', lineWidth: 0.5, textFill: '#000000' }
+                    ]
+                ],
+    
+    'populated':  [
+                    [
+                        'single',
+                        'point',
+                        [
+                            [FAR, 'data/populated.110.json']
+                        ],
+                        { strokeStyle: '#000000', fillStyle: '#FF0000', lineWidth: 0.5, textFill: '#000000' }
+                    ]
+                ],
 }
 
 function toggle_box(btn, id) {
@@ -216,13 +228,47 @@ function toggle_box(btn, id) {
     var $btn = $(btn);
     if(!a.is(':visible')) {
         a.show('slow');
-        if($btn.text() == '< More')
-            $btn.text('> Less');
+        if($btn.text() == 'More >')
+            $btn.text('Less <');
     }
     else {
         a.hide('slow');
-        if($btn.text() == '> Less')
-            $btn.text('< More');
+        if($btn.text() == 'Less <')
+            $btn.text('More >');
+    }
+}
+
+function changeYear(delta) {
+    var currYear = parseInt($('#year').val());
+    if(currYear + delta >= 1880 && currYear + delta <= 2010){
+        $('#year').val(currYear + delta);
+        var year = $('#year').val();
+        $('#yearval').text(year);
+        map.changeLayer('oceanTemp', year);
+        map.changeLayer('landTemp', year);
+        map.changeLayer('mixedTemp', year);
+        return true;
+    }
+    return false;
+}
+
+function frame() {
+    if(changeYear(1))
+        movieTimeout = setTimeout(frame, 200);
+    else
+        playpause();
+}
+
+var movieTimeout;
+function playpause() {
+    var $btn = $('#playpause');
+    if($btn.text() == 'Play') {
+        movieTimeout = setTimeout(frame, 200);
+        $btn.text('Pause ||');
+    }
+    else if($btn.text() == 'Pause ||') {
+        clearTimeout(movieTimeout);
+        $btn.text('Play');
     }
 }
 

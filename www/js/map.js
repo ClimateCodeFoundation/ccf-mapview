@@ -69,7 +69,7 @@ function CanvasMap(container, zoom) {
         var mouse_coord = [this.n-e.pageY/this.zoom, e.pageX/this.zoom+this.w]; // [s,w] of the mouse
         this.zoom *= Math.pow(1.1, delta); // zoom in
         var new_center = [mouse_coord[0] + (e.pageY - $(window).height()/2) / this.zoom, mouse_coord[1] + ($(window).width()/2 - e.pageX) / this.zoom];
-        this.resize(new_center); // on the mouse position
+        this.resize(null, new_center); // on the mouse position
         $('#zoom').text(this.zoom.toFixed(0));
     }));
     
@@ -128,7 +128,6 @@ function CanvasMap(container, zoom) {
     }
     
     this.redoLayer = function(l) {
-        this.layers[l].clear()
         this.layers[l].render();
     }
     
@@ -187,10 +186,13 @@ function CanvasMap(container, zoom) {
         return layer.change(subid);
     }
     
-    this.resize = function(center) {
+    this.resize = function(event, center) {
         this.width = $(window).width();
         this.height = $(window).height();
         
+        this.control_layer.$canvas.attr('width', this.width);
+        this.control_layer.$canvas.attr('height', this.height);
+
         for(var l in this.layers) {
             this.layers[l].$canvas.attr('width', this.width);
             this.layers[l].$canvas.attr('height', this.height);
@@ -301,6 +303,7 @@ function Layer(map, container) {
     var hidden = true;
     this.hide = function() {
         hidden = true;
+        this.clear();
     }
     this.show = function() {
         hidden = false;
@@ -323,7 +326,6 @@ function Layer(map, container) {
         if(!multi)
             return false;
         subid = sid;
-        this.clear();
         this.render();
         return true;
     }
@@ -353,9 +355,10 @@ function Layer(map, container) {
                 this.data[index][res] = new UniformData(res, data, style);
             else if(datatype == 'grid')
                 this.data[index][res] = new GridData(res, data, style, this.map.grid);
+            else if(datatype == 'point')
+                this.data[index][res] = new PointData(res, data, style);
         }
         this.loading[index] = false;
-        this.clear();
         this.render();
     }
     
@@ -372,6 +375,7 @@ function Layer(map, container) {
                     var filepath = this.sets[i][1][r][1][subid];
                     if(res <= this.map.zoom) {
                         if(this.data[i][res] && this.data[i][res][subid]) { //loaded
+                            this.clear();
                             this.data[i][res][subid].render(this.map, this.ctx);
                             break;
                         }
@@ -388,6 +392,7 @@ function Layer(map, container) {
                     var filepath = this.sets[i][1][r][1];
                     if(res <= this.map.zoom) {
                         if(this.data[i][res]) { //loaded
+                            this.clear();
                             this.data[i][res].render(this.map, this.ctx);
                             break;
                         }
@@ -408,7 +413,7 @@ function Layer(map, container) {
 
 /*
     Draws point data with labels, being careful not to overlap labels
-    - derived almost entirely from layer rendering code in github.com/RandomEtc/shapefile-js, under some license
+    - derived almost entirely from layer rendering code in github.com/RandomEtc/shapefile-js, under some open source license
 */
 function PointData(res, data, style) {
     // data = [[[x, y], text],
@@ -434,9 +439,13 @@ function PointData(res, data, style) {
         if (style.textFill || style.textStroke) {
             if (!style.helper) {
                 style.helper = document.createElement('canvas');
-                style.helper.width = canvas.width;
-                style.helper.height = canvas.height;
+                //$('#map').append($(style.helper)); // show it --------------- for debug
+                //$(style.helper).addClass('layer');
             }
+            
+            // do this every time in case the window was resized
+            style.helper.width = map.width;
+            style.helper.height = map.height;
 
             var helper = style.helper.getContext('2d');
             helper.clearRect(0,0,style.helper.width,style.helper.height);
@@ -455,8 +464,8 @@ function PointData(res, data, style) {
             
             for (var d in data) {
                 var coords = map.coord(data[d][0][0]/100, data[d][0][1]/100);
-                var text = trim(data[d][1]);
-                var tx = Math.round(3 + coords[0] * sc);
+                var text = data[d][1];
+                var tx = Math.round(3 + coords[0]);
                 var ty = Math.round(map.height - coords[1]);
                 var tw = Math.round(ctx.measureText(text).width);
                 var th = 12;
@@ -476,7 +485,6 @@ function PointData(res, data, style) {
                 if (img.data[3]) continue;
                 
                 helper.fillRect(tx, ty-th/2, tw, th);
-                
                 if (style.textStroke) ctx.strokeText(text, tx, ty);
                 if (style.textFill) ctx.fillText(text, tx, ty);
             }
