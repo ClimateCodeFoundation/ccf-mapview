@@ -85,7 +85,7 @@ DATA = { // id: [[[resolution, filepath], [resolution, filepath], ...], fillcolo
                             [MEDIUM, 'data/countries.50.json'],
                             [CLOSE, 'data/countries.10.json']
                         ],
-                        { strokeStyle: '#FFFFFF', lineWidth: 2.0 }
+                        { strokeStyle: '#FFFFFF', lineWidth: 1.0 }
                     ]
                 ], //#000000
     
@@ -217,7 +217,7 @@ DATA = { // id: [[[resolution, filepath], [resolution, filepath], ...], fillcolo
                         [
                             [FAR, 'data/stations.json']
                         ],
-                        { strokeStyle: '#000000', fillStyle: '#FF0000', lineWidth: 0.5, textFill: '#000000' }
+                        { classMap: {'C': {fillStyle: '#FF0000'}, 'B': {fillStyle: '#FF8800'}, 'A':{fillStyle: '#0000FF'}}, strokeStyle: '#000000', lineWidth: 0.5 }
                     ]
                 ],
 }
@@ -287,6 +287,25 @@ function attacher() {
     }
 }
 
+// show a popup of station annotation (and maybe graph)
+// given a station id (sid) - an internal index into the station list, nothing meaningful
+// - this will be called in the scope of the map
+function showStation(sid) {
+    $('#anno').show('slow');
+    $('#annoText').text('Station ' + sid);
+    JSON('data/stations/s' + sid + '.json', {'callback': function(data) {
+        var content = '';
+        for(var d in data) {
+            content += "<br/>" + d + ": " + data[d];
+        }
+        $('#annoText').append(content);
+    }}, {});
+}
+
+function hideAnno() {
+    $('#anno').hide('slow');
+}
+
 var map;
 
 function init() {
@@ -294,7 +313,17 @@ function init() {
     map = new CanvasMap(document.getElementById('map'), 4); //(container, numLayers, zoom) where zoom indicates pixels per degree
     for(var i in LAYERS) {
         var l = LAYERS[i];
-        map.addLayer(l, DATA[l]);
+        
+        // attach callback to stations layer to capture clicks
+        // and display annotation in a popup
+        if(l == 'stations') {
+            map.addLayer(l, DATA[l], showStation);
+        }
+        
+        // no callback for other layers
+        else {
+            map.addLayer(l, DATA[l]);
+        }
     }
     map.show('land');
     map.show('rivers');

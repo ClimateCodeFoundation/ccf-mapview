@@ -169,7 +169,7 @@ function CanvasMap(container, zoom) {
         }
     }
     
-    this.addLayer = function(id, info) {
+    this.addLayer = function(id, info, callback) {
         this.layers.push(new Layer(this, container));
         var i = this.layers.length - 1;
         layer_map[id] = i;
@@ -186,8 +186,15 @@ function CanvasMap(container, zoom) {
             }
         }
         this.layers[i].onclick(function(lon, lat, objs){
-            console.log(lon + ',' + lat);
-            console.log(objs);
+            if(objs.length > 0) {
+                for(var o in objs) {
+                    if(objs[o] != null) {
+                        console.log(this.id + ': ' + lon.toFixed(0) + ',' + lat.toFixed(0) + ' [' + objs + ']');
+                        callback.apply(this, objs); // make a callback with the list of objects, usually indices into a list of features
+                        break;
+                    }
+                }
+            }
         });
     }
     
@@ -428,15 +435,17 @@ function Layer(map, container) {
 
                 // collect a list of objects at this position on this layer
                 var objs = [];
-                for(var i in this.sets) {
-                    for(var r in this.sets[i][1]) {
-                        var res = this.sets[i][1][r][0];
-                        if(res <= this.map.zoom && this.data[i][res]) {
-                            if(multi && this.data[i][res][subid]) {
-                                objs.push(this.data[i][res][subid].atCoord(event.clientX, event.clientY, lon, lat));
-                            }
-                            else {
-                                objs.push(this.data[i][res].atCoord(event.clientX, event.clientY, lon, lat));
+                if(!hidden) {
+                    for(var i in this.sets) {
+                        for(var r in this.sets[i][1]) {
+                            var res = this.sets[i][1][r][0];
+                            if(res <= this.map.zoom && this.data[i][res]) {
+                                if(multi && this.data[i][res][subid]) {
+                                    objs.push(this.data[i][res][subid].atCoord(event.clientX, event.clientY, lon, lat));
+                                }
+                                else {
+                                    objs.push(this.data[i][res].atCoord(event.clientX, event.clientY, lon, lat));
+                                }
                             }
                         }
                     }
@@ -458,14 +467,14 @@ function PointData(res, data, style) {
     //         [[x, y], text],
     //         ...
     //        ]
-    var RADIUS = 2;
-    var DIAMETER = RADIUS*2 + 1
+    var RADIUS = 3;
+    var DIAMETER = RADIUS*2
     
     // get the index of the point at the given pixel coordinates (x,y)
     this.atCoord = function(x, y) {
         for(var d in data) {
             coords = map.coord(data[d][0][0]/100, data[d][0][1]/100);
-            if(eucldist(coords, [x, y]) < RADIUS) {
+            if(eucldist(coords, [x, map.height-y]) < RADIUS+1) {
                 return d;
             }
         }
@@ -478,11 +487,35 @@ function PointData(res, data, style) {
         if (style.lineWidth) ctx.lineWidth = style.lineWidth;
 
         for (var d in data) {
+            
+            // set classMap styles, if available
+            var subStyle = {};
+            if (style.classMap && style.classMap[data[d][2]]) { // third value in the data is the class (for stations, C, B, or A, urban, suburb, or rural, respectively)
+                for(var s in style.classMap[data[d][2]]) {
+                    ctx[s] = style.classMap[data[d][2]][s];
+                    subStyle[s] = ctx[s];
+                }
+            }
+            
             var coords = map.coord(data[d][0][0]/100, data[d][0][1]/100);
-            if (style.fillStyle) {
+            if (style.fillStyle || subStyle.fillStyle) {
+                /* draw a circle
+                ctx.beginPath();
+                ctx.arc(coords[0], map.height - coords[1], RADIUS, 0, Math.PI*2, true); // (x, y, radius, start_radian, end_radian, connect?)
+                ctx.closePath();
+                ctx.fill();
+                */
+                // draw rectangle
                 ctx.fillRect(coords[0] - RADIUS, map.height - coords[1] - RADIUS, DIAMETER, DIAMETER);
             }
-            if (style.strokeStyle) {
+            if (style.strokeStyle || subStyle.strokeStyle) {
+                /* draw a circle
+                ctx.beginPath();
+                ctx.arc(coords[0], map.height - coords[1], RADIUS, 0, Math.PI*2, true); // (x, y, radius, start_radian, end_radian, connect?)
+                ctx.closePath();
+                ctx.stroke();
+                */
+                // draw rectangle
                 ctx.strokeRect(coords[0] - RADIUS, map.height - coords[1] - RADIUS, DIAMETER, DIAMETER);
             }
         }

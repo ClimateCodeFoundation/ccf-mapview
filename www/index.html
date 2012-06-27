@@ -44,76 +44,84 @@
     <div id='map' class='map_container'></div>
 
     <div class='controls'>
-        <div class='shader'></div>
-        
-        <div class='header'>
-            <div class='header-title'>CCF MapView</div>
-            <div>Climate Code Foundation</div>
+        <div class='left'>
+            <div class='shader'></div>
+            
+            <div class='header'>
+                <div class='header-title'>CCF MapView</div>
+                <div>Climate Code Foundation</div>
+                <br/>
+                <div onclick='toggle_box(this, "about")' class='link' id='more' style='display:block'>More &gt;</div>
+                <div id='about' class='popup'>
+                    This is a map visualization of the <a href='http://climatecode.org/' target='_blank'>Climate Code Foundation</a>'s implementation of the NASA Goddard Institute for Space Studies (GISS) Surface Temperature Analysis (<a href='http://data.giss.nasa.gov/gistemp/' target='_blank'>GISTEMP<a/>). This code is <a href='http://code.google.com/p/ccc-gistemp/' target='_blank'>ccc-gistemp</a>.
+                    <br/>
+                    <br/>
+                    This project is open source under the MIT License and available at <a href='http://code.google.com/p/ccf-mapview' target='_blank'>code.google.com/p/ccf-mapview</a>. We use <a href='http://www.naturalearthdata.com' target='_blank'>Natural Earth Data</a>, which is a great resource and in the public domain. Parts of the rendering were inspired by <a href='https://github.com/RandomEtc/shapefile-js' target='_blank'>shapefile-js</a>.
+                    <br/>
+                    <br/>
+                    <a href='http://www.naturalearthdata.com' target='_blank'><img src='img/NED_logo.png' style='width: 180px'/></a>
+                </div>
+            </div>
+            
             <br/>
-            <div onclick='toggle_box(this, "about")' class='link' id='more' style='display:block'>More &gt;</div>
-            <div id='about' class='popup'>
-                This is a map visualization of the <a href='http://climatecode.org/' target='_blank'>Climate Code Foundation</a>'s implementation of the NASA Goddard Institute for Space Studies (GISS) Surface Temperature Analysis (<a href='http://data.giss.nasa.gov/gistemp/' target='_blank'>GISTEMP<a/>). This code is <a href='http://code.google.com/p/ccc-gistemp/' target='_blank'>ccc-gistemp</a>.
+            <div class='control-nav'> <!-- panning and zooming -->
+                <div class='btn' onclick='zoom(2)'>+</div>
+                <div class='btn' onclick='zoom(0.5)'>-</div>
+                <div id='zoom' style="display: inline-block">4</div>x
+                <!--
+                <br/>
+                <div class='btn' onclick="pan(0, 0.5)">up</div>
+                <div class='btn' onclick="pan(-0.5, 0)">left</div>
+                <div class='btn' onclick="pan(0.5, 0)">right</div>
+                <div class='btn' onclick="pan(0, -0.5)">down</div>
+                -->
+            </div>
+            <div class='control-data'> <!-- data controls -->
+                <br/>
+                <div class='btn' onclick="toggle(this, 'coordinates')">Coordinates</div>
                 <br/>
                 <br/>
-                This project is open source under the MIT License and available at <a href='http://code.google.com/p/ccf-mapview' target='_blank'>code.google.com/p/ccf-mapview</a>. We use <a href='http://www.naturalearthdata.com' target='_blank'>Natural Earth Data</a>, which is a great resource and in the public domain. Parts of the rendering were inspired by <a href='https://github.com/RandomEtc/shapefile-js' target='_blank'>shapefile-js</a>.
+                Data:
+                <br/>
+                <div class='btn' onclick="toggle(this, 'topo')">topography</div>
+                <br/>
+                <div class='btn' onclick="toggle(this, 'radiance')">night light radiance</div>
                 <br/>
                 <br/>
-                <a href='http://www.naturalearthdata.com' target='_blank'><img src='img/NED_logo.png' style='width: 180px'/></a>
+                Intermediate steps [2010]:
+                <br/>
+                <div class='btn' onclick="toggle(this, 'ost2010')">ocean input</div>
+                <br/>
+                <div class='btn' onclick="toggle(this, 'lt2010')">land merged</div>
+                <br/>
+                <div class='btn' onclick="toggle(this, 'landmask')">land mask</div>
+                <br/>
+                <br/>
+                <div class='btn' onclick="toggle(this, 'pointTest')">test point data</div>
+                <br/>
+                <div class='btn' onclick="toggle(this, 'populated')">cities</div>
+                <br/>
+                <div class='btn' onclick="toggle(this, 'stations')">weather stations</div>
+                <br/>
+                <br/>
+                <div id='yearval'>1880</div>
+                <input type="range" id='year' min="1880" max="2010" value='1880' class='slider' onchange='changeYear(0)'/>
+                <br/>
+                <div class='btn' onclick="changeYear(-1)">&lt;</div>
+                <div class='btn' id='playpause' onclick="playpause()">Play</div>
+                <div class='btn' onclick="changeYear(1)">&gt;</div>
+                <br/>
+                Temps:
+                <div class='btn' id='oceanTemp' onclick="radio(this)">Ocean</div>
+                <div class='btn' id='landTemp' onclick="radio(this)">Land</div>
+                <div class='btn' id='mixedTemp' onclick="radio(this)">Mixed</div>
             </div>
         </div>
-        
-        <br/>
-        <div class='control-nav'> <!-- panning and zooming -->
-            <div class='btn' onclick='zoom(2)'>+</div>
-            <div class='btn' onclick='zoom(0.5)'>-</div>
-            <div id='zoom' style="display: inline-block">4</div>x
-            <!--
-            <br/>
-            <div class='btn' onclick="pan(0, 0.5)">up</div>
-            <div class='btn' onclick="pan(-0.5, 0)">left</div>
-            <div class='btn' onclick="pan(0.5, 0)">right</div>
-            <div class='btn' onclick="pan(0, -0.5)">down</div>
-            -->
-        </div>
-        <div class='control-data'> <!-- data controls -->
-            <br/>
-            <div class='btn' onclick="toggle(this, 'coordinates')">Coordinates</div>
-            <br/>
-            <br/>
-            Data:
-            <br/>
-            <div class='btn' onclick="toggle(this, 'topo')">topography</div>
-            <br/>
-            <div class='btn' onclick="toggle(this, 'radiance')">night light radiance</div>
-            <br/>
-            <br/>
-            Intermediate steps [2010]:
-            <br/>
-            <div class='btn' onclick="toggle(this, 'ost2010')">ocean input</div>
-            <br/>
-            <div class='btn' onclick="toggle(this, 'lt2010')">land merged</div>
-            <br/>
-            <div class='btn' onclick="toggle(this, 'landmask')">land mask</div>
-            <br/>
-            <br/>
-            <div class='btn' onclick="toggle(this, 'pointTest')">test point data</div>
-            <br/>
-            <div class='btn' onclick="toggle(this, 'populated')">cities</div>
-            <br/>
-            <div class='btn' onclick="toggle(this, 'stations')">weather stations</div>
-            <br/>
-            <br/>
-            <div id='yearval'>1880</div>
-            <input type="range" id='year' min="1880" max="2010" value='1880' class='slider' onchange='changeYear(0)'/>
-            <br/>
-            <div class='btn' onclick="changeYear(-1)">&lt;</div>
-            <div class='btn' id='playpause' onclick="playpause()">Play</div>
-            <div class='btn' onclick="changeYear(1)">&gt;</div>
-            <br/>
-            Temps:
-            <div class='btn' id='oceanTemp' onclick="radio(this)">Ocean</div>
-            <div class='btn' id='landTemp' onclick="radio(this)">Land</div>
-            <div class='btn' id='mixedTemp' onclick="radio(this)">Mixed</div>
+        <div id='anno' class='right' style='display:none'>
+            <div class='closeBtn' onclick='hideAnno()'>X</div>
+            <div id='annoText' style='display:inline-block'>
+            </div>
+            <canvas id='annoGraph' style='display:inline-block'></canvas>
         </div>
     </div>
 </body>
