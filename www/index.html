@@ -1,3 +1,10 @@
+<!--
+ Copyright (c) 2012 Climate Code Foundation (climatecode.org)
+ Licensed under the MIT License (LICENSE.txt)
+ 
+ Version 0.1.0
+-->
+
 <!DOCTYPE html>
 <head>
 <title>CCF MapView</title>
@@ -93,6 +100,8 @@
             <br/>
             <div class='btn' onclick="toggle(this, 'populated')">cities</div>
             <br/>
+            <div class='btn' onclick="toggle(this, 'stations')">weather stations</div>
+            <br/>
             <br/>
             <div id='yearval'>1880</div>
             <input type="range" id='year' min="1880" max="2010" value='1880' class='slider' onchange='changeYear(0)'/>
@@ -102,9 +111,9 @@
             <div class='btn' onclick="changeYear(1)">&gt;</div>
             <br/>
             Temps:
-            <div class='btn' onclick="toggle(this, 'oceanTemp')">Ocean</div>
-            <div class='btn' onclick="toggle(this, 'landTemp')">Land</div>
-            <div class='btn' onclick="toggle(this, 'mixedTemp')">Mixed</div>
+            <div class='btn' id='oceanTemp' onclick="radio(this)">Ocean</div>
+            <div class='btn' id='landTemp' onclick="radio(this)">Land</div>
+            <div class='btn' id='mixedTemp' onclick="radio(this)">Mixed</div>
         </div>
     </div>
 </body>

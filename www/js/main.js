@@ -8,7 +8,7 @@
 NODATA = 9999;
 
 // this is the order the layers will be shown, from bottom to top
-LAYERS = ['land', 'glaciers', 'topo', 'rivers', 'lakes', 'countries', 'radiance', 'coordinates', 'landmask', 'ost2010', 'lt2010', 'mixed2010', 'oceanTemp', 'landTemp', 'mixedTemp', 'pointTest', 'populated'];// 'climate'];
+LAYERS = ['land', 'glaciers', 'topo', 'rivers', 'lakes', 'countries', 'radiance', 'coordinates', 'landmask', 'ost2010', 'lt2010', 'mixed2010', 'oceanTemp', 'landTemp', 'mixedTemp', 'pointTest', 'populated', 'stations'];// 'climate'];
 
 FAR = 0
 MEDIUM = 16
@@ -85,7 +85,7 @@ DATA = { // id: [[[resolution, filepath], [resolution, filepath], ...], fillcolo
                             [MEDIUM, 'data/countries.50.json'],
                             [CLOSE, 'data/countries.10.json']
                         ],
-                        { strokeStyle: '#FFFFFF', lineWidth: 1.0 }
+                        { strokeStyle: '#FFFFFF', lineWidth: 2.0 }
                     ]
                 ], //#000000
     
@@ -144,18 +144,6 @@ DATA = { // id: [[[resolution, filepath], [resolution, filepath], ...], fillcolo
                         { colorMap: [[0, null, [0,0,0,0.0], [0,0,0,0.3]]] }
                     ]
                 ],
-    /*
-    // this one is a set of time-series grid data - something different must be done
-    '1880-2010':[
-                    [
-                        'grid',
-                        [
-                            [FAR, 'data/mixed.1880.2010.grid.json']
-                        ],
-                        { colorMap: [[null, 0, [0, 0, 255, 1], [0, 0, 255, 0.3]], [0, null, [255, 0, 0, 0.3], [255, 0, 0, 1]]] }
-                    ]
-                ],
-    */
     'coordinates': [
                     [
                         'single',
@@ -221,6 +209,17 @@ DATA = { // id: [[[resolution, filepath], [resolution, filepath], ...], fillcolo
                         { strokeStyle: '#000000', fillStyle: '#FF0000', lineWidth: 0.5, textFill: '#000000' }
                     ]
                 ],
+    
+    'stations':  [
+                    [
+                        'single',
+                        'point',
+                        [
+                            [FAR, 'data/stations.json']
+                        ],
+                        { strokeStyle: '#000000', fillStyle: '#FF0000', lineWidth: 0.5, textFill: '#000000' }
+                    ]
+                ],
 }
 
 function toggle_box(btn, id) {
@@ -260,6 +259,7 @@ function frame() {
 }
 
 var movieTimeout;
+
 function playpause() {
     var $btn = $('#playpause');
     if($btn.text() == 'Play') {
@@ -304,9 +304,26 @@ function init() {
     map.update();
 }
 
+var radios = ['oceanTemp', 'landTemp', 'mixedTemp'];
+function radio(btn) {
+    var $btn = $(btn);
+    if($btn.hasClass('btn-selected')) {
+        toggle(btn, $btn.attr('id'));
+    }
+    else {
+        for(var r in radios) {
+            var $o = $('#' + radios[r]);
+            if($o.hasClass('btn-selected')) {
+                toggle($o.get()[0], radios[r]);
+            }
+        }
+        toggle(btn, $btn.attr('id'));
+    }
+}
+
 // toggle data sets on and off
 function toggle(btn, datum) {
-    $btn = $(btn);
+    var $btn = $(btn);
     if($btn.hasClass('btn-selected')) {
         if(map.hide(datum)) {
             $btn.removeClass('btn-selected');

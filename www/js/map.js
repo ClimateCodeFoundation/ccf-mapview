@@ -72,6 +72,12 @@ function CanvasMap(container, zoom) {
         this.resize(null, new_center); // on the mouse position
         $('#zoom').text(this.zoom.toFixed(0));
     }));
+    this.control_layer.$canvas.click(attacher(this, function(e) {
+        // manually propogate click events down through layers
+        for(l in this.layers) {
+            this.layers[l].click(e);
+        }
+    }));
     
     // pan and changeZoom are updater functions triggered globally by buttons to
     // adjust the viewing window
@@ -179,6 +185,10 @@ function CanvasMap(container, zoom) {
                 this.layers[i].change(firstkey); // set the default subid to the first in the list
             }
         }
+        this.layers[i].onclick(function(lon, lat, objs){
+            console.log(lon + ',' + lat);
+            console.log(objs);
+        });
     }
     
     this.changeLayer = function(id, subid) {
@@ -408,6 +418,34 @@ function Layer(map, container) {
             }
         }
     }
+    
+    // pseudo-event registration
+    this.onclick = function(callback) {
+        this.click = (function() {
+            return function(event) {
+                var lon = this.map.w + (event.clientX / this.map.zoom);
+                var lat = this.map.n - (event.clientY / this.map.zoom);
+
+                // collect a list of objects at this position on this layer
+                var objs = [];
+                for(var i in this.sets) {
+                    for(var r in this.sets[i][1]) {
+                        var res = this.sets[i][1][r][0];
+                        if(res <= this.map.zoom && this.data[i][res]) {
+                            if(multi && this.data[i][res][subid]) {
+                                objs.push(this.data[i][res][subid].atCoord(event.clientX, event.clientY, lon, lat));
+                            }
+                            else {
+                                objs.push(this.data[i][res].atCoord(event.clientX, event.clientY, lon, lat));
+                            }
+                        }
+                    }
+                }
+                    
+                callback.apply(this, [lon, lat, objs]);
+            };
+        })();
+    }
 }
 
 
@@ -420,6 +458,19 @@ function PointData(res, data, style) {
     //         [[x, y], text],
     //         ...
     //        ]
+    var RADIUS = 2;
+    var DIAMETER = RADIUS*2 + 1
+    
+    // get the index of the point at the given pixel coordinates (x,y)
+    this.atCoord = function(x, y) {
+        for(var d in data) {
+            coords = map.coord(data[d][0][0]/100, data[d][0][1]/100);
+            if(eucldist(coords, [x, y]) < RADIUS) {
+                return d;
+            }
+        }
+        return null;
+    }
     
     this.render = function(map, ctx) {
         if (style.fillStyle) ctx.fillStyle = style.fillStyle;
@@ -429,10 +480,10 @@ function PointData(res, data, style) {
         for (var d in data) {
             var coords = map.coord(data[d][0][0]/100, data[d][0][1]/100);
             if (style.fillStyle) {
-                ctx.fillRect(coords[0], map.height - coords[1], 3, 3);
+                ctx.fillRect(coords[0] - RADIUS, map.height - coords[1] - RADIUS, DIAMETER, DIAMETER);
             }
             if (style.strokeStyle) {
-                ctx.strokeRect(coords[0], map.height - coords[1], 3, 3);
+                ctx.strokeRect(coords[0] - RADIUS, map.height - coords[1] - RADIUS, DIAMETER, DIAMETER);
             }
         }
         
@@ -503,6 +554,11 @@ function VectorData(res, data, style) {
         }
     }
     
+    // get the index of the polygon at the given pixel coordinates (x,y)
+    this.atCoord = function(x, y) {
+        return null;
+    }
+    
     this.render = function(map, ctx) {
         //var m = 0;
         //var colors = ['#FF0000', '#FF7700', '#FFFF00', '#00FF00', '#00FFFF', '#0000FF', '#FF00FF'];
@@ -536,8 +592,21 @@ function VectorData(res, data, style) {
 
 
 // drawn on 8k grid
+// grid is [[s,w,n,e], [s,w,n,e], ...]
 function GridData(res, data, style, grid) {
     var range = computeRange(data);
+    
+    // get the index of the cell at the given pixel coordinates (x,y)
+    this.atCoord = function(x, y) {
+        var c = map.coord(x, y);
+        for(var g in grid) {
+            if(c[0] >= grid[g][1] && c <= grid[g][3] && c >= grid[g][0] && c <= grid[g][2]) {
+                return g;
+            }
+        }
+        return null;
+    }
+    
     this.render = function(map, ctx) {
         for(var s in style) {
             ctx[s] = style[s];
@@ -569,6 +638,15 @@ function UniformData(res, data, style) {
     var cols = data[0].length;
     var degperblock = 360 / cols; // unit box w/h in degrees
     var root = [-180, 90];
+    
+    // get the index of the cell at the given pixel coordinates (x,y)
+    this.atCoord = function(x, y, lon, lat) {
+        var col = Math.floor((lon + 180) / degperblock);
+        var row = Math.floor((lat + 90) / degperblock);
+        if(col >= 0 && row >= 0)
+            return row * cols + col;
+        return null;
+    }
     
     var range = computeRange(data);
     this.render = function(map, ctx) {
