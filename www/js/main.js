@@ -8,7 +8,7 @@
 NODATA = 9999;
 
 // this is the order the layers will be shown, from bottom to top
-LAYERS = ['land', 'glaciers', 'topo', 'rivers', 'lakes', 'countries', 'radiance', 'coordinates', 'landmask', 'ost2010', 'lt2010', 'mixed2010', 'oceanTemp', 'landTemp', 'mixedTemp', 'pointTest', 'populated', 'stations'];// 'climate'];
+LAYERS = ['land', 'glaciers', 'topo', 'rivers', 'lakes', 'radiance', 'coordinates', 'landmask', 'ost2010', 'lt2010', 'mixed2010', 'oceanTemp', 'landTemp', 'mixedTemp', 'countries', 'pointTest', 'populated', 'stations'];// 'climate'];
 
 FAR = 0
 MEDIUM = 16
@@ -290,15 +290,98 @@ function attacher() {
 // show a popup of station annotation (and maybe graph)
 // given a station id (sid) - an internal index into the station list, nothing meaningful
 // - this will be called in the scope of the map
-function showStation(sid) {
+function showStation(sdata) {
+    sid = sdata[3]; // station ID
     $('#anno').show('slow');
-    $('#annoText').text('Station ' + sid);
+    $('#annoText').text('Getting station data...');
     JSON('data/stations/s' + sid + '.json', {'callback': function(data) {
-        var content = '';
+        $('#annoText').empty();
+        var content = data['NAME'] + ' (' + data['ID'] + ')';
+        
+        // population class
+        var popmap = {'C':'Urban', 'B':'Suburban', 'A':'Rural', 'U':'Urban', 'S':'Suburban', 'R':'Rural'}
+        var population = popmap[data['POPCSS']];
+        if(population && population.length == 0)
+            population = popmap[data['POPCLS']];
+        if(population)
+            content += '<br/>Population: ' + population;
+        
+        // elevation
+        var elevation = data['STNELEV'];
+        if(elevation == -999.0)
+            elevation = data['GRELEV'];
+        if(elevation != undefined && elevation != null)
+            content += '<br/>Elevation: ' + elevation + 'm';
+        
+        // vegetation
+        var vegetation = data['STVEG'];
+        if(vegetation == 'xx')
+            vegetation = data['GRVEG'];
+        else {
+            var vegmap = {'DE':'Desert', 'FO':'Forested', 'IC':'Ice', 'MA':'Marsh'};
+            vegetation = vegmap[data['STVEG']]
+        }
+        if(vegetation != undefined && vegetation != null)
+            content += '<br/>Environment: ' + vegetation;
+        
+        // topography
+        var topomap = {'FL':'Flat', 'HI':'Hilly', 'MT':'Mountain Top', 'MV':'Mountain Valley'}
+        var topography = topomap[data['TOPO']];
+        if(topography != undefined && topography != null)
+            content += '<br/>Topography: ' + topography;
+        
+        // airport
+        if(data['AIRSTN'] == 'A')
+            content += '<br/>Station at an airport';
+        
+        // body of water
+        if(data['STLOC'] && data['STLOC'] != 'no') {
+            watermap = {'CO':'the ocean', 'LA':'a lake'};
+            content += '<br/>' + Math.max(parseFloat(data['OCNDIS']), 0.0) + 'km from ' + watermap[data['STLOC']];
+        }
+        
+        // town/city
+        if(data['POPSIZ'] && data['POPSIZ'] > 0) {
+            content += '<br/>' + Math.max(parseFloat(data['TOWNDIS']), 0.0) + 'km from town/city of ' + data['POPSIZ'] + '000 people';
+        }
+        /*
         for(var d in data) {
             content += "<br/>" + d + ": " + data[d];
         }
+        */
         $('#annoText').append(content);
+        
+        var array = [['x', 'Step 0', 'Step 1', 'Step 2']];
+        for(var y = 1880; y <= 2010; y++) {
+            var stry = ''+y;
+            var point = [stry];
+            if(data['step0'][stry]) {
+                point.push(parseFloat(data['step0'][stry])/100);
+            }
+            else {
+                point.push(null);
+            }
+            if(data['step1'][stry]) {
+                point.push(parseFloat(data['step1'][stry])/100);
+            }
+            else {
+                point.push(null);
+            }
+            if(data['step2'][stry]) {
+                point.push(parseFloat(data['step2'][stry])/100);
+            }
+            else {
+                point.push(null);
+            }
+            array.push(point);
+        }
+        
+        // Create and populate the data table.
+        var data = google.visualization.arrayToDataTable(array);
+
+        // Create and draw the visualization.
+        new google.visualization.LineChart(document.getElementById('annoGraph')).draw(data, {curveType: "function", width: 500, height: 400, backgroundColor:{fill:'transparent'}} );
+        
     }}, {});
 }
 

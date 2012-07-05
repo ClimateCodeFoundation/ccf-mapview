@@ -10,13 +10,18 @@
 <title>CCF MapView</title>
 <link href='css/main.css' rel='stylesheet'/>
 <link href='img/globe_tiny.png' rel='icon'/>
-<!-- Google font -->
-<link href='http://fonts.googleapis.com/css?family=Special+Elite' rel='stylesheet' type='text/css'>
+
 <script src='js/jquery-1.7.1.min.js'></script>
 <script src='js/jquery.mousewheel.js'></script>
 <script src='js/main.js'></script>
 <script src='js/remote.js'></script>
 <script type="text/javascript" src="js/map.js"></script>
+
+<!-- Google charts API -->
+<script type="text/javascript" src="http://www.google.com/jsapi"></script>
+<script type="text/javascript">
+    google.load('visualization', '1', {packages: ['corechart']});
+</script>
 
 </head>
 <body onload="init()">
@@ -119,9 +124,9 @@
         </div>
         <div id='anno' class='right' style='display:none'>
             <div class='closeBtn' onclick='hideAnno()'>X</div>
-            <div id='annoText' style='display:inline-block'>
-            </div>
-            <canvas id='annoGraph' style='display:inline-block'></canvas>
+            <div id='annoText' style='display:inline-block'></div>
+            <br/>
+            <div id='annoGraph' style='display:inline-block'></div> <!-- for google chart API -->
         </div>
     </div>
 </body>

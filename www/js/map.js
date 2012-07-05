@@ -190,7 +190,8 @@ function CanvasMap(container, zoom) {
                 for(var o in objs) {
                     if(objs[o] != null) {
                         console.log(this.id + ': ' + lon.toFixed(0) + ',' + lat.toFixed(0) + ' [' + objs + ']');
-                        callback.apply(this, objs); // make a callback with the list of objects, usually indices into a list of features
+                        if(callback)
+                            callback.apply(this, objs); // make a callback with the list of objects, usually indices into a list of features
                         break;
                     }
                 }
@@ -392,7 +393,7 @@ function Layer(map, container) {
                     var filepath = this.sets[i][1][r][1][subid];
                     if(res <= this.map.zoom) {
                         if(this.data[i][res] && this.data[i][res][subid]) { //loaded
-                            this.clear();
+                            this.clear(); // clearing here makes the animation more fluid by not clearing until the data is ready, but it also hides multiple data sets on one layer (bathymetry)
                             this.data[i][res][subid].render(this.map, this.ctx);
                             break;
                         }
@@ -461,6 +462,7 @@ function Layer(map, container) {
 /*
     Draws point data with labels, being careful not to overlap labels
     - derived almost entirely from layer rendering code in github.com/RandomEtc/shapefile-js, under some open source license
+    - data in the form: [[lon, lat], name, color_class, id]
 */
 function PointData(res, data, style) {
     // data = [[[x, y], text],
@@ -475,7 +477,7 @@ function PointData(res, data, style) {
         for(var d in data) {
             coords = map.coord(data[d][0][0]/100, data[d][0][1]/100);
             if(eucldist(coords, [x, map.height-y]) < RADIUS+1) {
-                return d;
+                return data[d];
             }
         }
         return null;
