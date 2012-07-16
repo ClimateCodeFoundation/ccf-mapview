@@ -139,7 +139,6 @@ canvas.layer {
 */
 
 .popup {
-    width: 400px;
     font-family: helvetica;
     display: none;
     text-align: left;

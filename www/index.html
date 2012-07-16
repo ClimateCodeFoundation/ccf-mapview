@@ -16,6 +16,7 @@
 <script src='js/main.js'></script>
 <script src='js/remote.js'></script>
 <script type="text/javascript" src="js/map.js"></script>
+<script type="text/javascript" src="js/chart.js"></script>
 
 <!-- Google charts API -->
 <script type="text/javascript" src="http://www.google.com/jsapi"></script>
@@ -57,7 +58,7 @@
                 <div>Climate Code Foundation</div>
                 <br/>
                 <div onclick='toggle_box(this, "about")' class='link' id='more' style='display:block'>More &gt;</div>
-                <div id='about' class='popup'>
+                <div id='about' class='popup' style='width:400px'>
                     This is a map visualization of the <a href='http://climatecode.org/' target='_blank'>Climate Code Foundation</a>'s implementation of the NASA Goddard Institute for Space Studies (GISS) Surface Temperature Analysis (<a href='http://data.giss.nasa.gov/gistemp/' target='_blank'>GISTEMP<a/>). This code is <a href='http://code.google.com/p/ccc-gistemp/' target='_blank'>ccc-gistemp</a>.
                     <br/>
                     <br/>
@@ -86,23 +87,23 @@
                 <div class='btn' onclick="toggle(this, 'coordinates')">Coordinates</div>
                 <br/>
                 <br/>
-                Data:
-                <br/>
-                <div class='btn' onclick="toggle(this, 'topo')">topography</div>
-                <br/>
-                <div class='btn' onclick="toggle(this, 'radiance')">night light radiance</div>
-                <br/>
-                <br/>
-                Intermediate steps [2010]:
-                <br/>
-                <div class='btn' onclick="toggle(this, 'ost2010')">ocean input</div>
-                <br/>
-                <div class='btn' onclick="toggle(this, 'lt2010')">land merged</div>
-                <br/>
-                <div class='btn' onclick="toggle(this, 'landmask')">land mask</div>
-                <br/>
-                <br/>
-                <div class='btn' onclick="toggle(this, 'pointTest')">test point data</div>
+                <div onclick="toggle_box(this, 'extra_data')" class='link' style='display:block'>Extra &gt;</div>
+                <div id='extra_data' class='popup'>
+                    Data:
+                    <br/>
+                    <div class='btn' onclick="toggle(this, 'topo')">topography</div>
+                    <br/>
+                    <div class='btn' onclick="toggle(this, 'radiance')">night light radiance</div>
+                    <br/>
+                    <br/>
+                    Intermediate steps [2010]:
+                    <br/>
+                    <div class='btn' onclick="toggle(this, 'ost2010')">ocean input</div>
+                    <br/>
+                    <div class='btn' onclick="toggle(this, 'lt2010')">land merged</div>
+                    <br/>
+                    <div class='btn' onclick="toggle(this, 'landmask')">land mask</div>
+                </div>
                 <br/>
                 <div class='btn' onclick="toggle(this, 'populated')">cities</div>
                 <br/>

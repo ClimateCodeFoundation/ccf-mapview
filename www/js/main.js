@@ -8,7 +8,7 @@
 NODATA = 9999;
 
 // this is the order the layers will be shown, from bottom to top
-LAYERS = ['land', 'glaciers', 'topo', 'rivers', 'lakes', 'radiance', 'coordinates', 'landmask', 'ost2010', 'lt2010', 'mixed2010', 'oceanTemp', 'landTemp', 'mixedTemp', 'countries', 'pointTest', 'populated', 'stations'];// 'climate'];
+LAYERS = ['land', 'glaciers', 'topo', 'rivers', 'lakes', 'radiance', 'coordinates', 'landmask', 'ost2010', 'lt2010', 'mixed2010', 'oceanTemp', 'landTemp', 'mixedTemp', 'countries', 'populated', 'stations'];
 
 FAR = 0
 MEDIUM = 16
@@ -188,17 +188,6 @@ DATA = { // id: [[[resolution, filepath], [resolution, filepath], ...], fillcolo
                     ]
                 ],
     
-    'pointTest':  [
-                    [
-                        'single',
-                        'point',
-                        [
-                            [FAR, 'data/a_point_test_data.json']
-                        ],
-                        { strokeStyle: '#000000', fillStyle: '#FF0000', lineWidth: 0.5, textFill: '#000000' }
-                    ]
-                ],
-    
     'populated':  [
                     [
                         'single',
@@ -229,11 +218,15 @@ function toggle_box(btn, id) {
         a.show('slow');
         if($btn.text() == 'More >')
             $btn.text('Less <');
+        else if($btn.text() == 'Extra >')
+            $btn.text('Extra <');
     }
     else {
         a.hide('slow');
         if($btn.text() == 'Less <')
             $btn.text('More >');
+        else if($btn.text() == 'Extra <')
+            $btn.text('Extra >');
     }
 }
 
@@ -292,7 +285,7 @@ function attacher() {
 // - this will be called in the scope of the map
 function showStation(sdata) {
     sid = sdata[3]; // station ID
-    $('#anno').show('slow');
+    $('#anno').show();
     $('#annoText').text('Getting station data...');
     JSON('data/stations/s' + sid + '.json', {'callback': function(data) {
         $('#annoText').empty();
@@ -351,105 +344,25 @@ function showStation(sdata) {
         */
         $('#annoText').append(content);
         
-        
-        /*
-            Draw Google Chart
-        */
-        if(chartType == 'year') {
-            var array = [['x']];
-            if(data['step0'])
-                array[0].push('Step 0');
-            if(data['step1'])
-                array[0].push('Step 1');
-            if(data['step2'])
-                array[0].push('Step 2');
-            for(var y = 1880; y <= 2010; y++) {
-                var stry = ''+y;
-                var point = [stry];
-                if(data['step0']) {
-                    if(data['step0'][stry]) {
-                        point.push(parseFloat(data['step0'][stry])/100);
-                    }
-                    else
-                        point.push(null);
-                }
-                if(data['step1']) {
-                    if(data['step1'][stry]) {
-                        point.push(parseFloat(data['step1'][stry])/100);
-                    }
-                    else
-                        point.push(null);
-                }
-                if(data['step2']) {
-                    if(data['step2'][stry]) {
-                        point.push(parseFloat(data['step2'][stry])/100);
-                    }
-                    else
-                        point.push(null);
-                }
-                array.push(point);
-            }
-        }
-        
-        else if(chartType == 'month') {
-            var array = [['x']];
-            if(data['step0'] && data['step0']['months'])
-                array[0].push('Step 0');
-            if(data['step1'] && data['step1']['months'])
-                array[0].push('Step 1');
-            if(data['step2'] && data['step2']['months'])
-                array[0].push('Step 2');
-            if(array[0].length < 2) {
-                $(document.getElementById('annoGraph')).empty();
-                return;
-            }
-            var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']; //[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
-            for(var m in months) {
-                var strm = months[m]
-                var point = [strm];
-                if(data['step0']) {
-                    if(data['step0']['months']) {
-                        point.push(parseFloat(data['step0']['months'][m])/100);
-                    }
-                    else
-                        point.push(null);
-                }
-                if(data['step1']) {
-                    if(data['step1']['months']) {
-                        point.push(parseFloat(data['step1']['months'][m])/100);
-                    }
-                    else
-                        point.push(null);
-                }
-                if(data['step2']) {
-                    if(data['step2']['months']) {
-                        point.push(parseFloat(data['step2']['months'][m])/100);
-                    }
-                    else
-                        point.push(null);
-                }
-                array.push(point);
-            }
-        }        
-        // Create and populate the data table.
-        var data = google.visualization.arrayToDataTable(array);
-
-        // Create and draw the visualization.
-        new google.visualization.LineChart(document.getElementById('annoGraph')).draw(data, {curveType: "function", width: 500, height: 400, backgroundColor:{fill:'transparent'}} );
+        chart.setData(data);
+        chart.render();
+        // --
+        //  Do Chart
+        // --
         
     }}, {});
 }
 
-var chartType = 'year';
 function changeChart(type) {
-    chartType = type;
+    chart.render(type);
 }
 
 function hideAnno() {
-    $('#anno').hide('slow');
+    $('#anno').hide();
 }
 
 var map;
+var chart;
 
 function init() {
     // start with 3 layers, zoom 4x (4 pixels per degree)
@@ -474,6 +387,9 @@ function init() {
     map.show('glaciers');
     map.show('countries');
     map.update();
+    
+    // init chart
+    chart = new Chart(document.getElementById('annoGraph'));
 }
 
 var radios = ['oceanTemp', 'landTemp', 'mixedTemp'];
