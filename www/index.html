@@ -122,6 +122,36 @@
                 <div class='btn' id='landTemp' onclick="radio(this)">Land</div>
                 <div class='btn' id='mixedTemp' onclick="radio(this)">Mixed</div>
             </div>
+            
+            <div style='margin-left: 10px'>
+                <div style='width: 150px; height:20px; position:relative'>
+                    <div style='display:inline-block; position:absolute; left:0px'>-5&deg;C</div>
+                    <div style='display:inline-block; position:absolute; width:150px; margin:auto; text-align:center'>0&deg;C</div>
+                    <div style='display:inline-block; position:absolute; right:0px'>5&deg;C</div>
+                </div>
+                <canvas id='colorLegend' style='width:150px; height:30px; opacity:0.7'></canvas>
+                <script>
+                    (function() {
+                        var c = document.getElementById('colorLegend');
+                        c.width = 150;
+                        c.height = 30;
+                        var ctx = c.getContext('2d');
+                        
+                        // create linear gradients
+                        var coldgrad = ctx.createLinearGradient(0,0,75,0);
+                        coldgrad.addColorStop(0, '#0000B4');
+                        coldgrad.addColorStop(1, '#6464FF');
+                        var hotgrad = ctx.createLinearGradient(75,0,150,0);
+                        hotgrad.addColorStop(0, '#FF6464');
+                        hotgrad.addColorStop(1, '#B40000');
+
+                        ctx.fillStyle = coldgrad;
+                        ctx.fillRect(0,0,75,30);
+                        ctx.fillStyle = hotgrad;
+                        ctx.fillRect(75,0,150,30);
+                     })();
+                </script>
+            </div>
         </div>
         <div id='anno' class='right' style='display:none'>
             <div class='closeBtn' onclick='hideAnno()'>X</div>

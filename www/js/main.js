@@ -25,7 +25,15 @@ for(var i = 1880; i < 2011; i++) {
     mixed_years[i] = 'data/mixed.' + i + '.grid.json';
 }
 
-TEMPCOLOR = [[null, 0, [0, 0, 180, 0.7], [100, 100, 255, 0.7]], [0, null, [255, 100, 100, 0.7], [180, 0, 0, 0.7]]];
+// dynamic:
+//TEMPCOLOR = [[null, 0, [0, 0, 180, 0.7], [100, 100, 255, 0.7]], [0, null, [255, 100, 100, 0.7], [180, 0, 0, 0.7]]];
+// static:
+// values are 1/100ths of one degree Celsius and range
+// from -581 to 485, my scale goes from -500 to 500,
+// with everything outside this being the same as the
+// closest assigned value (everything less than -500
+// looks like -500)
+TEMPCOLOR = [[null, -500, [0, 0, 180, 0.7], [0, 0, 180, 0.7]], [-500, 0, [0, 0, 180, 0.7], [100, 100, 255, 0.7]], [0, 500, [255, 100, 100, 0.7], [180, 0, 0, 0.7]], [500, null, [180, 0, 0, 0.7], [180, 0, 0, 0.7]]];
 
 DATA = { // id: [[[resolution, filepath], [resolution, filepath], ...], fillcolor, outlinecolor, outlineonly, dontclose] - ...false, false is a normal filled polygon
     'land':     [
