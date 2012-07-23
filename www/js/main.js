@@ -291,8 +291,12 @@ function attacher() {
 // show a popup of station annotation (and maybe graph)
 // given a station id (sid) - an internal index into the station list, nothing meaningful
 // - this will be called in the scope of the map
-function showStation(sdata) {
+function showStationCallback(sdata) {
     sid = sdata[3]; // station ID
+    showStation(sid);
+}
+
+function showStation(sid) {
     $('#anno').show();
     $('#annoText').text('Getting station data...');
     JSON('data/stations/s' + sid + '.json', {'callback': function(data) {
@@ -381,7 +385,7 @@ function init() {
         // attach callback to stations layer to capture clicks
         // and display annotation in a popup
         if(l == 'stations') {
-            map.addLayer(l, DATA[l], showStation);
+            map.addLayer(l, DATA[l], showStationCallback);
         }
         
         // no callback for other layers
@@ -398,7 +402,91 @@ function init() {
     
     // init chart
     chart = new Chart(document.getElementById('annoGraph'));
+    rest();
 }
+
+// get and process REST parameters, if they exist
+function rest() {
+    /*
+      From helpful stackoverflow post:
+      http://stackoverflow.com/questions/979975/how-to-get-the-value-from-url-parameter
+    */
+    var QueryString = (function () {
+        var query_string = {};
+        var query = window.location.search.substring(1);
+        if(query.charAt(query.length-1) == '/')
+            query = query.substring(0, query.length-1);
+        var vars = query.split("&");
+        for (var i=0;i<vars.length;i++) {
+            var pair = vars[i].split("=");
+            // If first entry with this name
+            if (typeof query_string[pair[0]] === "undefined") {
+                query_string[pair[0]] = pair[1];
+            // If second entry with this name
+            } else if (typeof query_string[pair[0]] === "string") {
+                var arr = [ query_string[pair[0]], pair[1] ];
+                query_string[pair[0]] = arr;
+            // If third or later entry with this name
+            } else {
+                query_string[pair[0]].push(pair[1]);
+            }
+        } 
+        return query_string;
+    }) ();
+    if((QueryString['w'] || QueryString['e']) && (QueryString['n'] || QueryString['s'])) {
+        if(QueryString['w'])
+            x = -1 * parseFloat(QueryString['w']);
+        else
+            x = parseFloat(QueryString['e']);
+        if(QueryString['n'])
+            y = parseFloat(QueryString['n']);
+        else
+            y = -1 * parseFloat(QueryString['s']);
+        map.panTo(x,y);
+    }
+    if(QueryString['zoom']) {
+        try {
+            var z = parseFloat(QueryString['zoom']);
+            zoom(z/4);
+        } catch(e) {
+            console.log("invalid 'zoom' parameter");
+        }
+    }
+    if(QueryString['year']) {
+        var y = parseInt(QueryString['year']);
+        if (y >= 1880 && y <= 2010) {
+            $('#year').val(y);
+            $('#yearval').text(y);
+            map.changeLayer('oceanTemp', y);
+            map.changeLayer('landTemp', y);
+            map.changeLayer('mixedTemp', y);
+        }
+    }
+    if(QueryString['coordinates']) {
+        if(QueryString['coordinates'] == 'true')
+            $('#coordinates_btn').trigger('click');
+    }
+    if(QueryString['cities']) {
+        if(QueryString['cities'] == 'true')
+            $('#cities_btn').trigger('click');
+    }
+    if(QueryString['stations']) {
+        if(QueryString['stations'] == 'true')
+            $('#stations_btn').trigger('click');
+    }
+    if(QueryString['data']) {
+        if(QueryString['data'] == 'ocean')
+            $('#oceanTemp').trigger('click');
+        else if(QueryString['data'] == 'land')
+            $('#landTemp').trigger('click');
+        else if(QueryString['data'] == 'mixed')
+            $('#mixedTemp').trigger('click');
+    }
+    if(QueryString['station']) {
+        showStation(QueryString['station']);
+    }
+}
+
 
 var radios = ['oceanTemp', 'landTemp', 'mixedTemp'];
 function radio(btn) {

@@ -11,7 +11,7 @@
 <link href='css/main.css' rel='stylesheet'/>
 <link href='img/globe_tiny.png' rel='icon'/>
 
-<script src='js/jquery-1.7.1.min.js'></script>
+<script src='https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js'></script>
 <script src='js/jquery.mousewheel.js'></script>
 <script src='js/main.js'></script>
 <script src='js/remote.js'></script>
@@ -84,7 +84,7 @@
             </div>
             <div class='control-data'> <!-- data controls -->
                 <br/>
-                <div class='btn' onclick="toggle(this, 'coordinates')">Coordinates</div>
+                <div class='btn' onclick="toggle(this, 'coordinates')" id='coordinates_btn'>Coordinates</div>
                 <br/>
                 <br/>
                 <div onclick="toggle_box(this, 'extra_data')" class='link' style='display:block'>Extra &gt;</div>
@@ -105,9 +105,9 @@
                     <div class='btn' onclick="toggle(this, 'landmask')">land mask</div>
                 </div>
                 <br/>
-                <div class='btn' onclick="toggle(this, 'populated')">cities</div>
+                <div class='btn' onclick="toggle(this, 'populated')" id='cities_btn'>cities</div>
                 <br/>
-                <div class='btn' onclick="toggle(this, 'stations')">weather stations</div>
+                <div class='btn' onclick="toggle(this, 'stations')" id='stations_btn'>weather stations</div>
                 <br/>
                 <br/>
                 <div id='yearval'>1880</div>

@@ -81,6 +81,7 @@ function CanvasMap(container, zoom) {
     
     // pan and changeZoom are updater functions triggered globally by buttons to
     // adjust the viewing window
+    // x and y are a fraction of the viewing window
     this.pan = function(x, y) {
         var degreesWide = this.width / this.zoom;
         var degreesHigh = this.height / this.zoom;
@@ -105,6 +106,10 @@ function CanvasMap(container, zoom) {
         var e = this.e + xchange;
      
         this.update(null, s, w, n, e);
+    }
+    
+    this.panTo = function(x, y) {
+        this.update(null, y + (this.height / this.zoom / 2), x - (this.width / this.zoom / 2), y - (this.height / this.zoom / 2), x + (this.width / this.zoom / 2));
     }
     
     this.changeZoom = function(mult) {
