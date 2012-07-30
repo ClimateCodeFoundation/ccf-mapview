@@ -33,7 +33,12 @@ for(var i = 1880; i < 2011; i++) {
 // with everything outside this being the same as the
 // closest assigned value (everything less than -500
 // looks like -500)
-TEMPCOLOR = [[null, -500, [0, 0, 180, 0.7], [0, 0, 180, 0.7]], [-500, 0, [0, 0, 180, 0.7], [100, 100, 255, 0.7]], [0, 500, [255, 100, 100, 0.7], [180, 0, 0, 0.7]], [500, null, [180, 0, 0, 0.7], [180, 0, 0, 0.7]]];
+TEMPCOLOR = [[null, -500, [0, 0, 180, 0.7], [0, 0, 180, 0.7]],
+             [-500, -100, [0, 0, 180, 0.7], [100, 100, 255, 0.7]],
+             [-100, 0, [100, 100, 255, 0.7], [255, 255, 255, 0.7]],
+             [0, 100, [255, 255, 255, 0.7], [255, 100, 100, 0.7]],
+             [100, 500, [255, 100, 100, 0.7], [180, 0, 0, 0.7]],
+             [500, null, [180, 0, 0, 0.7], [180, 0, 0, 0.7]]];
 
 DATA = { // id: [[[resolution, filepath], [resolution, filepath], ...], fillcolor, outlinecolor, outlineonly, dontclose] - ...false, false is a normal filled polygon
     'land':     [
@@ -223,14 +228,14 @@ function toggle_box(btn, id) {
     var a = $('#' + id);
     var $btn = $(btn);
     if(!a.is(':visible')) {
-        a.show('slow');
+        a.show();
         if($btn.text() == 'More >')
             $btn.text('Less <');
         else if($btn.text() == 'Extra >')
             $btn.text('Extra <');
     }
     else {
-        a.hide('slow');
+        a.hide();
         if($btn.text() == 'Less <')
             $btn.text('More >');
         else if($btn.text() == 'Extra <')
@@ -250,6 +255,7 @@ function changeYear(delta) {
         return true;
     }
     return false;
+    makeREST();
 }
 
 function frame() {
@@ -296,11 +302,14 @@ function showStationCallback(sdata) {
     showStation(sid);
 }
 
+var RESTsid = null;
+
 function showStation(sid) {
     $('#anno').show();
+    chart.clear();
     $('#annoText').text('Getting station data...');
+    
     JSON('data/stations/s' + sid + '.json', {'callback': function(data) {
-        $('#annoText').empty();
         var content = data['NAME'] + ' (' + data['ID'] + ')';
         
         // population class
@@ -354,15 +363,15 @@ function showStation(sid) {
             content += "<br/>" + d + ": " + data[d];
         }
         */
-        $('#annoText').append(content);
         
+        $('#annoText').html(content);
         chart.setData(data);
         chart.render();
-        // --
-        //  Do Chart
-        // --
         
     }}, {});
+    
+    RESTsid = sid;
+    makeREST();
 }
 
 function changeChart(type) {
@@ -371,10 +380,67 @@ function changeChart(type) {
 
 function hideAnno() {
     $('#anno').hide();
+    RESTsid = null;
+    makeREST();
 }
 
 var map;
 var chart;
+
+function makeREST() {
+    var params = {};
+    
+    data = null;
+    if($('#oceanTemp').hasClass('btn-selected'))
+        data = 'ocean';
+    else if($('#landTemp').hasClass('btn-selected'))
+        data = 'land';
+    else if($('#mixedTemp').hasClass('btn-selected'))
+        data = 'mixed';
+    if(data)
+        params['data'] = data;
+    
+    if($('#coordinates_btn').hasClass('btn-selected'))
+        params['coordinates'] = 'true';
+    
+    if($('#stations_btn').hasClass('btn-selected'))
+        params['stations'] = 'true';
+    
+    if($('#cities_btn').hasClass('btn-selected'))
+        params['cities'] = 'true';
+    
+    params['year'] = $('#yearval').text();
+    
+    if(RESTsid)
+        params['station'] = '' + RESTsid;
+    
+    params['zoom'] = '' + map.zoom.toFixed(2);
+    
+    var center = [map.w + (map.e - map.w)/2, map.s + (map.n - map.s)/2];
+    
+    if(center[0] < 0)
+        params['w'] = center[0] * -1;
+    else
+        params['e'] = center[0];
+    if(center[1] < 0)
+        params['s'] = center[1] * -1;
+    else
+        params['n'] = center[1];
+    
+    var url = '?';
+    for(var k in params) {
+        if(url.length > 1)
+            url += '&';
+        url += k + '=' + params[k];
+    }
+    
+    window.history.pushState(params, "state", url);
+}
+
+// handle history state changes
+window.onpopstate = function(event) {  
+    rest();
+};
 
 function init() {
     // start with 3 layers, zoom 4x (4 pixels per degree)
@@ -433,6 +499,17 @@ function rest() {
         } 
         return query_string;
     }) ();
+    
+    // zoom and coordinates
+    if(QueryString['zoom']) {
+        try {
+            var z = parseFloat(QueryString['zoom']);
+            map.zoom = z;
+            $('#zoom').text(map.zoom.toFixed(0));
+        } catch(e) {
+            console.log("invalid 'zoom' parameter");
+        }
+    }
     if((QueryString['w'] || QueryString['e']) && (QueryString['n'] || QueryString['s'])) {
         if(QueryString['w'])
             x = -1 * parseFloat(QueryString['w']);
@@ -442,16 +519,13 @@ function rest() {
             y = parseFloat(QueryString['n']);
         else
             y = -1 * parseFloat(QueryString['s']);
-        map.panTo(x,y);
     }
-    if(QueryString['zoom']) {
-        try {
-            var z = parseFloat(QueryString['zoom']);
-            zoom(z/4);
-        } catch(e) {
-            console.log("invalid 'zoom' parameter");
-        }
+    else {
+        x = 0;
+        y = 0;
     }
+    map.resize(null, [y,x]);
+    
     if(QueryString['year']) {
         var y = parseInt(QueryString['year']);
         if (y >= 1880 && y <= 2010) {
@@ -462,25 +536,69 @@ function rest() {
             map.changeLayer('mixedTemp', y);
         }
     }
-    if(QueryString['coordinates']) {
-        if(QueryString['coordinates'] == 'true')
-            $('#coordinates_btn').trigger('click');
+    if(QueryString['coordinates'] && QueryString['coordinates'] == 'true') { // select
+        if(!$('#coordinates_btn').hasClass('btn-selected')) {
+            $('#coordinates_btn').addClass('btn-selected');
+            map.show('coordinates');
+        }
     }
-    if(QueryString['cities']) {
-        if(QueryString['cities'] == 'true')
-            $('#cities_btn').trigger('click');
+    else if($('#coordinates_btn').hasClass('btn-selected')) { // deselect
+        $('#coordinates_btn').removeClass('btn-selected');
+        map.hide('coordinates');
     }
-    if(QueryString['stations']) {
-        if(QueryString['stations'] == 'true')
-            $('#stations_btn').trigger('click');
+
+    if(QueryString['stations'] && QueryString['stations'] == 'true') { // select
+        if(!$('#stations_btn').hasClass('btn-selected')) {
+            $('#stations_btn').addClass('btn-selected');
+            map.show('stations');
+        }
+    }
+    else if($('#stations_btn').hasClass('btn-selected')) { // deselect
+        $('#stations_btn').removeClass('btn-selected');
+        map.hide('stations');
+    }
+    
+    if(QueryString['cities'] && QueryString['cities'] == 'true') { // select
+        if(!$('#cities_btn').hasClass('btn-selected')) {
+            $('#cities_btn').addClass('btn-selected');
+            map.show('populated');
+        }
+    }
+    else if($('#cities_btn').hasClass('btn-selected')) { // deselect
+        $('#cities_btn').removeClass('btn-selected');
+        map.hide('populated');
+    }
+    
+    // deselect all first
+    for(var r in radios) {
+        var $o = $('#' + radios[r]);
+        if($o.hasClass('btn-selected')) {
+            $o.removeClass('btn-selected');
+            map.hide(radios[r]);
+        }
     }
     if(QueryString['data']) {
-        if(QueryString['data'] == 'ocean')
-            $('#oceanTemp').trigger('click');
-        else if(QueryString['data'] == 'land')
-            $('#landTemp').trigger('click');
-        else if(QueryString['data'] == 'mixed')
-            $('#mixedTemp').trigger('click');
+        if(QueryString['data'] == 'ocean') {
+            var $b = $('#oceanTemp');
+            if(!$b.hasClass('btn-selected')) {
+                $b.addClass('btn-selected');
+                map.show('oceanTemp');
+            }
+        }
+        else if(QueryString['data'] == 'land') {
+            var $b = $('#landTemp');
+            if(!$b.hasClass('btn-selected')) {
+                $b.addClass('btn-selected');
+                map.show('landTemp');
+            }
+        }
+        else if(QueryString['data'] == 'mixed') {
+            var $b = $('#mixedTemp');
+            if(!$b.hasClass('btn-selected')) {
+                $b.addClass('btn-selected');
+                map.show('mixedTemp');
+            }
+        }
     }
     if(QueryString['station']) {
         showStation(QueryString['station']);
@@ -492,17 +610,21 @@ var radios = ['oceanTemp', 'landTemp', 'mixedTemp'];
 function radio(btn) {
     var $btn = $(btn);
     if($btn.hasClass('btn-selected')) {
-        toggle(btn, $btn.attr('id'));
+        $btn.removeClass('btn-selected');
+        map.hide($btn.attr('id'));
     }
     else {
         for(var r in radios) {
             var $o = $('#' + radios[r]);
             if($o.hasClass('btn-selected')) {
-                toggle($o.get()[0], radios[r]);
+                $o.removeClass('btn-selected');
+                map.hide(radios[r]);
             }
         }
-        toggle(btn, $btn.attr('id'));
+        $btn.addClass('btn-selected');
+        map.show($btn.attr('id'));
     }
+    makeREST();
 }
 
 // toggle data sets on and off
@@ -518,15 +640,13 @@ function toggle(btn, datum) {
             $btn.addClass('btn-selected');
         }
     }
+    makeREST();
 }
 
 function zoom(z) {
     map.changeZoom(z);
     $('#zoom').text(map.zoom.toFixed(0));
-}
-
-function pan(x, y) {
-    map.pan(x, y);
+    makeREST();
 }
 
 // this is a supporting method to map values within a range

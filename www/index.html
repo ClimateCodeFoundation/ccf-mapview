@@ -59,10 +59,16 @@
                 <br/>
                 <div onclick='toggle_box(this, "about")' class='link' id='more' style='display:block'>More &gt;</div>
                 <div id='about' class='popup' style='width:400px'>
-                    This is a map visualization of the <a href='http://climatecode.org/' target='_blank'>Climate Code Foundation</a>'s implementation of the NASA Goddard Institute for Space Studies (GISS) Surface Temperature Analysis (<a href='http://data.giss.nasa.gov/gistemp/' target='_blank'>GISTEMP<a/>). This code is <a href='http://code.google.com/p/ccc-gistemp/' target='_blank'>ccc-gistemp</a>.
+                    This is a map visualization of <a href='http://code.google.com/p/ccc-gistemp/' target='_blank'>ccc-gistemp</a>, the <a href='http://climatecode.org/' target='_blank'>Climate Code Foundation</a>'s implementation of the NASA Goddard Institute for Space Studies (GISS) Surface Temperature Analysis (<a href='http://data.giss.nasa.gov/gistemp/' target='_blank'>GISTEMP<a/>).
                     <br/>
                     <br/>
-                    This project is open source under the MIT License and available at <a href='http://code.google.com/p/ccf-mapview' target='_blank'>code.google.com/p/ccf-mapview</a>. We use <a href='http://www.naturalearthdata.com' target='_blank'>Natural Earth Data</a>, which is a great resource and in the public domain. Parts of the rendering were inspired by <a href='https://github.com/RandomEtc/shapefile-js' target='_blank'>shapefile-js</a>.
+                    The map shows global yearly temperatures from 1880 to 2010, represented as the difference from the baseline period (1950 - 1980), where red indicates warmer temperatures and blue indicates cooler temperatures. You can choose from temperature sets computed over land (by fixed land-based climate stations), over the ocean, or the full mixed set. Other available data include major population centers and weather stations. Click a weather station pin to see more information and the historical temperature record for that station.
+                    <br/>
+                    <br/>
+                    Click and drag to move the map. Zoom by using the [+] and [-] buttons, the mouse wheel, or by double clicking on the map.
+                    <br/>
+                    <br/>
+                    This project is open source under the MIT License and available at <a href='http://code.google.com/p/ccf-mapview' target='_blank'>code.google.com/p/ccf-mapview</a>. We use <a href='http://www.naturalearthdata.com' target='_blank'>Natural Earth Data</a>, which is a great resource and in the public domain. Parts of the rendering were inspired by <a href='https://github.com/RandomEtc/shapefile-js' target='_blank'>shapefile-js</a>. If you have comments, questions, feedback, or want to contribute, we can be found at <a href='http://code.google.com/p/ccf-mapview' target='_blank'>code.google.com/p/ccf-mapview</a>.
                     <br/>
                     <br/>
                     <a href='http://www.naturalearthdata.com' target='_blank'><img src='img/NED_logo.png' style='width: 180px'/></a>
@@ -70,17 +76,10 @@
             </div>
             
             <br/>
-            <div class='control-nav'> <!-- panning and zooming -->
+            <div class='control-nav'> <!-- zooming -->
                 <div class='btn' onclick='zoom(2)'>+</div>
                 <div class='btn' onclick='zoom(0.5)'>-</div>
                 <div id='zoom' style="display: inline-block">4</div>x
-                <!--
-                <br/>
-                <div class='btn' onclick="pan(0, 0.5)">up</div>
-                <div class='btn' onclick="pan(-0.5, 0)">left</div>
-                <div class='btn' onclick="pan(0.5, 0)">right</div>
-                <div class='btn' onclick="pan(0, -0.5)">down</div>
-                -->
             </div>
             <div class='control-data'> <!-- data controls -->
                 <br/>
@@ -110,8 +109,8 @@
                 <div class='btn' onclick="toggle(this, 'stations')" id='stations_btn'>weather stations</div>
                 <br/>
                 <br/>
-                <div id='yearval'>1880</div>
-                <input type="range" id='year' min="1880" max="2010" value='1880' class='slider' onchange='changeYear(0)'/>
+                <div id='yearval'>2010</div>
+                <input type="range" id='year' min="1880" max="2010" value='2010' class='slider' onchange='changeYear(0)'/>
                 <br/>
                 <div class='btn' onclick="changeYear(-1)">&lt;</div>
                 <div class='btn' id='playpause' onclick="playpause()">Play</div>
@@ -137,18 +136,16 @@
                         c.height = 30;
                         var ctx = c.getContext('2d');
                         
-                        // create linear gradients
-                        var coldgrad = ctx.createLinearGradient(0,0,75,0);
-                        coldgrad.addColorStop(0, '#0000B4');
-                        coldgrad.addColorStop(1, '#6464FF');
-                        var hotgrad = ctx.createLinearGradient(75,0,150,0);
-                        hotgrad.addColorStop(0, '#FF6464');
-                        hotgrad.addColorStop(1, '#B40000');
+                        // create linear gradient
+                        var tempgrad = ctx.createLinearGradient(0,0,150,0);
+                        tempgrad.addColorStop(0, '#0000B4');
+                        tempgrad.addColorStop(0.4, '#6464FF');
+                        tempgrad.addColorStop(0.5, '#FFFFFF');
+                        tempgrad.addColorStop(0.6, '#FF6464');
+                        tempgrad.addColorStop(1, '#B40000');
 
-                        ctx.fillStyle = coldgrad;
-                        ctx.fillRect(0,0,75,30);
-                        ctx.fillStyle = hotgrad;
-                        ctx.fillRect(75,0,150,30);
+                        ctx.fillStyle = tempgrad;
+                        ctx.fillRect(0,0,150,30);
                      })();
                 </script>
             </div>
@@ -159,7 +156,7 @@
             <br/>
             <input type='radio' name='graphType' value='year' checked onclick='changeChart("year")'> Yearly  <input type='radio' name='graphType' value='month' onclick='changeChart("month")'> Monthly
             <br/>
-            <div id='annoGraph' style='display:inline-block'></div> <!-- for google chart API -->
+            <div id='annoGraph' style='display:inline-block; width:500px'></div> <!-- for google chart API -->
         </div>
     </div>
 </body>

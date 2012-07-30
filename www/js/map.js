@@ -64,6 +64,7 @@ function CanvasMap(container, zoom) {
     }));
     this.control_layer.$canvas.mouseup(attacher(this, function(e) {
         this.dragging = false;
+        makeREST();
     }));
     this.control_layer.$canvas.mousewheel(attacher(this, function(e, delta, deltaX, deltaY) {
         var mouse_coord = [this.n-e.pageY/this.zoom, e.pageX/this.zoom+this.w]; // [s,w] of the mouse
@@ -71,12 +72,22 @@ function CanvasMap(container, zoom) {
         var new_center = [mouse_coord[0] + (e.pageY - $(window).height()/2) / this.zoom, mouse_coord[1] + ($(window).width()/2 - e.pageX) / this.zoom];
         this.resize(null, new_center); // on the mouse position
         $('#zoom').text(this.zoom.toFixed(0));
+        makeREST();
     }));
     this.control_layer.$canvas.click(attacher(this, function(e) {
         // manually propogate click events down through layers
         for(l in this.layers) {
             this.layers[l].click(e);
         }
+    }));
+    // zoom on doubleclick
+    this.control_layer.$canvas.dblclick(attacher(this, function(e) {
+        var mouse_coord = [this.n-e.pageY/this.zoom, e.pageX/this.zoom+this.w]; // [s,w] of the mouse
+        this.zoom *= 2; // zoom in
+        var new_center = [mouse_coord[0] + (e.pageY - $(window).height()/2) / this.zoom, mouse_coord[1] + ($(window).width()/2 - e.pageX) / this.zoom];
+        this.resize(null, new_center); // on the mouse position
+        $('#zoom').text(this.zoom.toFixed(0));
+        makeREST();
     }));
     
     // pan and changeZoom are updater functions triggered globally by buttons to

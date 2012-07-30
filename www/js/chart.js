@@ -22,6 +22,10 @@ function Chart(root) {
         this.data = data;
     };
     
+    this.clear = function() {
+        $(root).empty();
+    }
+    
     this.render = function(cht) {
     
         if(cht) {
