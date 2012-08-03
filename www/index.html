@@ -109,6 +109,11 @@
                 <div class='btn' onclick="toggle(this, 'stations')" id='stations_btn'>weather stations</div>
                 <br/>
                 <br/>
+                <div style='width:10px; height:10px; background-color:#FF8800; border:1px solid #000000; display:inline-block;'></div> Urban
+                <div style='width:10px; height:10px; background-color:#FFFF00; border:1px solid #000000; display:inline-block;'></div> Suburb
+                <div style='width:10px; height:10px; background-color:#00FF00; border:1px solid #000000; display:inline-block;'></div> Rural
+                <br/>
+                <br/>
                 <div id='yearval'>2010</div>
                 <input type="range" id='year' min="1880" max="2010" value='2010' class='slider' onchange='changeYear(0)'/>
                 <br/>
@@ -128,24 +133,34 @@
                     <div style='display:inline-block; position:absolute; width:150px; margin:auto; text-align:center'>0&deg;C</div>
                     <div style='display:inline-block; position:absolute; right:0px'>5&deg;C</div>
                 </div>
-                <canvas id='colorLegend' style='width:150px; height:30px; opacity:0.7'></canvas>
+                <canvas id='colorLegend' style='width:150px; height:60px; border:1px solid #000000'></canvas>
                 <script>
                     (function() {
                         var c = document.getElementById('colorLegend');
                         c.width = 150;
-                        c.height = 30;
+                        c.height = 60;
                         var ctx = c.getContext('2d');
+                        
+                        ctx.fillStyle = '#99AA77';
+                        ctx.fillRect(0, 0, 150, 30);
+                        ctx.fillStyle = '#AABBFF';
+                        ctx.fillRect(0, 30, 150, 60);
                         
                         // create linear gradient
                         var tempgrad = ctx.createLinearGradient(0,0,150,0);
-                        tempgrad.addColorStop(0, '#0000B4');
-                        tempgrad.addColorStop(0.4, '#6464FF');
-                        tempgrad.addColorStop(0.5, '#FFFFFF');
-                        tempgrad.addColorStop(0.6, '#FF6464');
-                        tempgrad.addColorStop(1, '#B40000');
+                        tempgrad.addColorStop(0, 'rgba(0, 0, 180, 0.7)');
+                        tempgrad.addColorStop(0.4, 'rgba(100, 100, 255, 0.7)');
+                        tempgrad.addColorStop(0.5, 'rgba(255, 255, 255, 0.5)');
+                        tempgrad.addColorStop(0.6, 'rgba(255, 100, 100, 0.7)');
+                        tempgrad.addColorStop(1, 'rgba(180, 0, 0, 0.7)');
 
                         ctx.fillStyle = tempgrad;
-                        ctx.fillRect(0,0,150,30);
+                        ctx.fillRect(0,0,150,60);
+                        
+                        ctx.fillStyle = '#FFFFFF';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText('Land', 0, 15);
+                        ctx.fillText('Ocean', 0, 45);
                      })();
                 </script>
             </div>

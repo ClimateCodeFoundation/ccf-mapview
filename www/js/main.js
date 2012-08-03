@@ -35,8 +35,8 @@ for(var i = 1880; i < 2011; i++) {
 // looks like -500)
 TEMPCOLOR = [[null, -500, [0, 0, 180, 0.7], [0, 0, 180, 0.7]],
              [-500, -100, [0, 0, 180, 0.7], [100, 100, 255, 0.7]],
-             [-100, 0, [100, 100, 255, 0.7], [255, 255, 255, 0.7]],
-             [0, 100, [255, 255, 255, 0.7], [255, 100, 100, 0.7]],
+             [-100, 0, [100, 100, 255, 0.7], [255, 255, 255, 0.5]],
+             [0, 100, [255, 255, 255, 0.5], [255, 100, 100, 0.7]],
              [100, 500, [255, 100, 100, 0.7], [180, 0, 0, 0.7]],
              [500, null, [180, 0, 0, 0.7], [180, 0, 0, 0.7]]];
 
@@ -175,7 +175,7 @@ DATA = { // id: [[[resolution, filepath], [resolution, filepath], ...], fillcolo
                         [
                             [FAR, ocean_years]
                         ],
-                        { colorMap: TEMPCOLOR }
+                        { colorMap: TEMPCOLOR, 'highlight':{strokeStyle: '#0000FF'} }
                     ],
                 ],
     
@@ -186,7 +186,7 @@ DATA = { // id: [[[resolution, filepath], [resolution, filepath], ...], fillcolo
                         [
                             [FAR, land_years]
                         ],
-                        { colorMap: TEMPCOLOR }
+                        { colorMap: TEMPCOLOR, 'highlight':{strokeStyle: '#0000FF'} }
                     ]
                 ],
     
@@ -197,7 +197,7 @@ DATA = { // id: [[[resolution, filepath], [resolution, filepath], ...], fillcolo
                         [
                             [FAR, mixed_years]
                         ],
-                        { colorMap: TEMPCOLOR }
+                        { colorMap: TEMPCOLOR, 'highlight':{strokeStyle: '#0000FF'} }
                     ]
                 ],
     
@@ -219,7 +219,7 @@ DATA = { // id: [[[resolution, filepath], [resolution, filepath], ...], fillcolo
                         [
                             [FAR, 'data/stations.json']
                         ],
-                        { classMap: {'C': {fillStyle: '#FF0000'}, 'B': {fillStyle: '#FF8800'}, 'A':{fillStyle: '#0000FF'}}, strokeStyle: '#000000', lineWidth: 0.5 }
+                        { classMap: {'C': {fillStyle: '#FF8800'}, 'B': {fillStyle: '#FFFF00'}, 'A':{fillStyle: '#00FF00'}, 'highlight':{fillStyle: '#0000FF'}}, strokeStyle: '#000000', lineWidth: 0.5 }
                     ]
                 ],
 }
@@ -299,6 +299,8 @@ function attacher() {
 // - this will be called in the scope of the map
 function showStationCallback(sdata) {
     sid = sdata[3]; // station ID
+    this.clearHighlight();
+    this.highlight(sdata);
     showStation(sid);
 }
 
@@ -364,6 +366,8 @@ function showStation(sid) {
         }
         */
         
+        content += "<br/><a href='data/csv/s" + sid + ".csv' target='_blank'>Download data (CSV)</a>";
+        
         $('#annoText').html(content);
         chart.setData(data);
         chart.render();
@@ -380,6 +384,7 @@ function changeChart(type) {
 
 function hideAnno() {
     $('#anno').hide();
+    map.getLayer('stations').clearHighlight();
     RESTsid = null;
     makeREST();
 }
@@ -387,7 +392,9 @@ function hideAnno() {
 var map;
 var chart;
 
-function makeREST() {
+function makeREST(addtohistory) {
+    if(addtohistory == null)
+        addtohistory = true;
     var params = {};
     
     data = null;
@@ -434,7 +441,10 @@ function makeREST() {
         url += k + '=' + params[k];
     }
     
-    window.history.pushState(params, "state", url);
+    if(addtohistory)
+        window.history.pushState(params, "state", url);
+    else
+        window.history.replaceState(params, "state", url);
 }
 
 // handle history state changes
@@ -447,16 +457,18 @@ function init() {
     map = new CanvasMap(document.getElementById('map'), 4); //(container, numLayers, zoom) where zoom indicates pixels per degree
     for(var i in LAYERS) {
         var l = LAYERS[i];
+        map.addLayer(l, DATA[l]);
         
         // attach callback to stations layer to capture clicks
         // and display annotation in a popup
         if(l == 'stations') {
-            map.addLayer(l, DATA[l], showStationCallback);
+            map.onclick(l, showStationCallback);
+            map.onmousemove(l, showStationName);
         }
         
-        // no callback for other layers
-        else {
-            map.addLayer(l, DATA[l]);
+        if(l == 'oceanTemp' || l == 'landTemp' || l == 'mixedTemp') {
+            map.onclick(l, showCellCallback);
+            map.onmousemove(l, showCellCoords);
         }
     }
     map.show('land');
@@ -469,6 +481,60 @@ function init() {
     // init chart
     chart = new Chart(document.getElementById('annoGraph'));
     rest();
+}
+
+// - this will be called in the scope of the layer
+function showStationName(sdata) {
+    pt = [sdata[0][0]/100, sdata[0][1]/100]; // station coordinates
+    sname = sdata[1]; // station name
+    sid = sdata[3]; // station ID
+    // here, 'this' is the station layer
+    this.showText(pt, sname);
+}
+
+function showCellCallback(cdata) {
+    this.clearHighlight();
+    this.highlight(parseInt(cdata[0]));
+    $('#anno').show();
+    chart.clear();
+    $('#annoText').text('Getting cell data...');
+    
+    JSON('data/sbx/cell' + cdata[0] + '.json', {'callback': function(data) {
+        var content = 'Cell: ' + cdata[1];
+        
+        var contributors = data['contributors'];
+        content += '<br/>Contributing stations:';
+        content += '<br/><div style="display:inline-block; overflow:auto; height: 300px; width: 300px">';
+        for(var c in contributors) {
+            if(c > 0)
+                content += '<br/>';
+            content += '&nbsp;&nbsp;&nbsp;' + contributors[c][0] + ' (weight: ' + contributors[c][1].toFixed(2) + ')';
+        }
+        content += '</div>';
+        
+        /*
+        for(var d in data) {
+            content += "<br/>" + d + ": " + data[d];
+        }
+        */
+        
+        $('#annoText').html(content);
+        //chart.setData(data);
+        //chart.render();
+        
+    }}, {});
+    
+    makeREST();
+}
+
+// - this will be called in the scope of the layer
+function showCellCoords(cdata) {
+    cellid = cdata[0];
+    coords = cdata[1]; // cell coordinates [s,w,n,e]
+    tmp = cdata[2]; // cell temperature
+    pt = [coords[1], coords[2]];
+    // here, 'this' is the temp layer
+    this.showText(pt, '('+coords[0]+','+coords[1]+') > ('+coords[2]+','+coords[3]+')', {'textBaseline':'top'});
 }
 
 // get and process REST parameters, if they exist
@@ -504,6 +570,8 @@ function rest() {
     if(QueryString['zoom']) {
         try {
             var z = parseFloat(QueryString['zoom']);
+            if(z < 2)
+                z = 2;
             map.zoom = z;
             $('#zoom').text(map.zoom.toFixed(0));
         } catch(e) {
@@ -646,7 +714,7 @@ function toggle(btn, datum) {
 function zoom(z) {
     map.changeZoom(z);
     $('#zoom').text(map.zoom.toFixed(0));
-    makeREST();
+    makeREST(false);
 }
 
 // this is a supporting method to map values within a range

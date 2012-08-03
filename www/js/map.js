@@ -61,23 +61,34 @@ function CanvasMap(container, zoom) {
         if(this.dragging) {
             this.update(this.zoom, this.drag_s+lat_offset, this.drag_w-lon_offset, this.drag_n+lat_offset, this.drag_e-lon_offset);
         }
+        // manually propogate click events down through layers
+        for(l in this.layers) {
+            if(this.layers[l].mousemove)
+                this.layers[l].mousemove(e);
+        }
     }));
     this.control_layer.$canvas.mouseup(attacher(this, function(e) {
         this.dragging = false;
-        makeREST();
+        makeREST(false);
     }));
     this.control_layer.$canvas.mousewheel(attacher(this, function(e, delta, deltaX, deltaY) {
         var mouse_coord = [this.n-e.pageY/this.zoom, e.pageX/this.zoom+this.w]; // [s,w] of the mouse
         this.zoom *= Math.pow(1.1, delta); // zoom in
+        if(this.zoom < 2)
+            this.zoom = 2;
         var new_center = [mouse_coord[0] + (e.pageY - $(window).height()/2) / this.zoom, mouse_coord[1] + ($(window).width()/2 - e.pageX) / this.zoom];
         this.resize(null, new_center); // on the mouse position
         $('#zoom').text(this.zoom.toFixed(0));
-        makeREST();
+        makeREST(false);
     }));
     this.control_layer.$canvas.click(attacher(this, function(e) {
-        // manually propogate click events down through layers
-        for(l in this.layers) {
-            this.layers[l].click(e);
+        // make sure the layer wasn't just dragged, it should be in the same place
+        if(e.pageX == this.drag_x && e.pageY == this.drag_y) {
+            // manually propogate click events down through layers
+            for(l in this.layers) {
+                if(this.layers[l].click)
+                    this.layers[l].click(e);
+            }
         }
     }));
     // zoom on doubleclick
@@ -87,7 +98,7 @@ function CanvasMap(container, zoom) {
         var new_center = [mouse_coord[0] + (e.pageY - $(window).height()/2) / this.zoom, mouse_coord[1] + ($(window).width()/2 - e.pageX) / this.zoom];
         this.resize(null, new_center); // on the mouse position
         $('#zoom').text(this.zoom.toFixed(0));
-        makeREST();
+        makeREST(false);
     }));
     
     // pan and changeZoom are updater functions triggered globally by buttons to
@@ -125,6 +136,8 @@ function CanvasMap(container, zoom) {
     
     this.changeZoom = function(mult) {
         this.zoom *= mult;
+        if(this.zoom < 2)
+            this.zoom = 2;
         this.resize();
     }
 
@@ -197,19 +210,30 @@ function CanvasMap(container, zoom) {
             var style = info[a][3];
             this.layers[i].addData(multi, type, resolutions, style);
             if(multi) {
-                for(var firstkey in resolutions[0][1]) break; // get the first key
-                this.layers[i].change(firstkey); // set the default subid to the first in the list
+                for(var lastkey in resolutions[0][1]); // get the last key
+                this.layers[i].change(lastkey); // set the default subid to the last in the list (2010)
             }
         }
-        this.layers[i].onclick(function(lon, lat, objs){
-            if(objs.length > 0) {
-                for(var o in objs) {
-                    if(objs[o] != null) {
-                        console.log(this.id + ': ' + lon.toFixed(0) + ',' + lat.toFixed(0) + ' [' + objs + ']');
-                        if(callback)
-                            callback.apply(this, objs); // make a callback with the list of objects, usually indices into a list of features
-                        break;
-                    }
+    }
+    
+    // attaches an event to the layer specified by [id]
+    // to call [callback] on a mouse click
+    this.onclick = function(id, callback) {
+        this.layers[layer_map[id]].onevent('click', function(lon, lat, objs){
+            if(objs.length > 0 && objs[0] != null) {
+                if(callback)
+                    callback.apply(this, objs); // make a callback with the list of objects, usually indices into a list of features
+            }
+        });
+    }
+    
+    // attaches an event to the layer specified by [id]
+    // to call [callback] on a mouse click
+    this.onmousemove = function(id, callback) {
+        this.layers[layer_map[id]].onevent('mousemove', function(lon, lat, objs){
+            if(objs.length > 0 && objs[0] != null) {
+                if(callback) {
+                    callback.apply(this, objs); // make a callback with the list of objects, usually indices into a list of features
                 }
             }
         });
@@ -282,6 +306,10 @@ function CanvasMap(container, zoom) {
         }
         this.redoLayer(layer_map['8kgrid']);
     }
+    
+    this.getLayer = function(nm) {
+        return this.layers[layer_map[nm]];
+    }
 }
 
 
@@ -333,6 +361,10 @@ function Layer(map, container) {
     this.loading = []; // list of boolean values indicating if each data set has an outstanding request pending
     var multi = false;
     var subid = null; // id of the subset of the timeseries to display
+    
+    // annotation/highlighting which can be triggered from outside
+    var text = null; // text to show at a point
+    var hObj = []; // list of highlighted data objects
     
     var hidden = true;
     this.hide = function() {
@@ -410,7 +442,8 @@ function Layer(map, container) {
                     if(res <= this.map.zoom) {
                         if(this.data[i][res] && this.data[i][res][subid]) { //loaded
                             this.clear(); // clearing here makes the animation more fluid by not clearing until the data is ready, but it also hides multiple data sets on one layer (bathymetry)
-                            this.data[i][res][subid].render(this.map, this.ctx);
+                            this.data[i][res][subid].render(this.map, this.ctx, hObj);
+                            this.renderText();
                             break;
                         }
                         else if(!this.loading[i]) {
@@ -427,7 +460,8 @@ function Layer(map, container) {
                     if(res <= this.map.zoom) {
                         if(this.data[i][res]) { //loaded
                             this.clear();
-                            this.data[i][res].render(this.map, this.ctx);
+                            this.data[i][res].render(this.map, this.ctx, hObj);
+                            this.renderText();
                             break;
                         }
                         else if(!this.loading[i]) {
@@ -444,8 +478,8 @@ function Layer(map, container) {
     }
     
     // pseudo-event registration
-    this.onclick = function(callback) {
-        this.click = (function() {
+    this.onevent = function(evt, callback) {
+        this[evt] = (function() {
             return function(event) {
                 var lon = this.map.w + (event.clientX / this.map.zoom);
                 var lat = this.map.n - (event.clientY / this.map.zoom);
@@ -472,6 +506,51 @@ function Layer(map, container) {
             };
         })();
     }
+    
+    this.renderText = function() {
+        if(text) {
+            var coords = this.map.coord(text[0][0], text[0][1]);
+            this.ctx.fillStyle = '#FFFFFF';
+            this.ctx.fillText(text[1], coords[0], this.map.height-coords[1]);
+        }
+    }
+    
+    this.showText = function(pt, txt, style) {
+        if(text != [pt, txt]) {
+            text = [pt, txt];
+            if(style) {
+                this.ctx.save();
+                for(var s in style) {
+                    this.ctx[s] = style[s];
+                }
+            }
+            this.render()
+            if(style) {
+                this.ctx.restore();
+            }
+        }
+    }
+    
+    this.clearText = function() {
+        text = null;
+    }
+    
+    this.highlight = function(obj) {
+        hObj.push(obj);
+        this.render();
+    }
+    
+    this.highlightAll = function(objs) {
+        for(var o in objs) {
+            hObj.push(objs[o]);
+        }
+        this.render();
+    }
+    
+    this.clearHighlight = function() {
+        hObj = [];
+        this.render();
+    }
 }
 
 
@@ -486,7 +565,6 @@ function PointData(res, data, style) {
     //         ...
     //        ]
     var RADIUS = 3;
-    var DIAMETER = RADIUS*2
     
     // get the index of the point at the given pixel coordinates (x,y)
     this.atCoord = function(x, y) {
@@ -499,23 +577,36 @@ function PointData(res, data, style) {
         return null;
     }
     
-    this.render = function(map, ctx) {
+    this.render = function(map, ctx, hObj) { //hObj: objects to highlight
         if (style.fillStyle) ctx.fillStyle = style.fillStyle;
         if (style.strokeStyle) ctx.strokeStyle = style.strokeStyle;
         if (style.lineWidth) ctx.lineWidth = style.lineWidth;
 
         for (var d in data) {
+            pt = [data[d][0][0]/100, data[d][0][1]/100];
+            if(pt[0] < map.w || pt[0] > map.e || pt[1] < map.s || pt[1] > map.n) {
+                continue
+            }
+            
+            if(hObj.indexOf(data[d]) != -1) {
+                var r = RADIUS * 2;
+                var cls = 'highlight'; // replace the normal class
+            }
+            else {
+                var r = RADIUS;
+                var cls = data[d][2]; // normal class
+            }
             
             // set classMap styles, if available
             var subStyle = {};
-            if (style.classMap && style.classMap[data[d][2]]) { // third value in the data is the class (for stations, C, B, or A, urban, suburb, or rural, respectively)
-                for(var s in style.classMap[data[d][2]]) {
-                    ctx[s] = style.classMap[data[d][2]][s];
+            if (style.classMap && style.classMap[cls]) { // third value in the data is the class (for stations, C, B, or A, urban, suburb, or rural, respectively)
+                for(var s in style.classMap[cls]) {
+                    ctx[s] = style.classMap[cls][s];
                     subStyle[s] = ctx[s];
                 }
             }
             
-            var coords = map.coord(data[d][0][0]/100, data[d][0][1]/100);
+            var coords = map.coord(pt[0], pt[1]);
             if (style.fillStyle || subStyle.fillStyle) {
                 /* draw a circle
                 ctx.beginPath();
@@ -524,7 +615,7 @@ function PointData(res, data, style) {
                 ctx.fill();
                 */
                 // draw rectangle
-                ctx.fillRect(coords[0] - RADIUS, map.height - coords[1] - RADIUS, DIAMETER, DIAMETER);
+                ctx.fillRect(coords[0] - r, map.height - coords[1] - r, r*2, r*2);
             }
             if (style.strokeStyle || subStyle.strokeStyle) {
                 /* draw a circle
@@ -534,7 +625,7 @@ function PointData(res, data, style) {
                 ctx.stroke();
                 */
                 // draw rectangle
-                ctx.strokeRect(coords[0] - RADIUS, map.height - coords[1] - RADIUS, DIAMETER, DIAMETER);
+                ctx.strokeRect(coords[0] - r, map.height - coords[1] - r, r*2, r*2);
             }
         }
         
@@ -565,7 +656,12 @@ function PointData(res, data, style) {
             ctx.textBaseline = 'middle';
             
             for (var d in data) {
-                var coords = map.coord(data[d][0][0]/100, data[d][0][1]/100);
+                pt = [data[d][0][0]/100, data[d][0][1]/100];
+                if(pt[0] < map.w || pt[0] > map.e || pt[1] < map.s || pt[1] > map.n) {
+                    continue
+                }
+                
+                var coords = map.coord(pt[0], pt[1]);
                 var text = data[d][1];
                 var tx = Math.round(3 + coords[0]);
                 var ty = Math.round(map.height - coords[1]);
@@ -610,7 +706,7 @@ function VectorData(res, data, style) {
         return null;
     }
     
-    this.render = function(map, ctx) {
+    this.render = function(map, ctx, hObj) {//hObj: objects to highlight
         //var m = 0;
         //var colors = ['#FF0000', '#FF7700', '#FFFF00', '#00FF00', '#00FFFF', '#0000FF', '#FF00FF'];
         for(var s in style) {
@@ -618,24 +714,28 @@ function VectorData(res, data, style) {
         }
         for(var d in data) {
             var bbox = data[d][0];
-            if(outOfBounds(bbox, map)) {
+            if(bbox[1] > map.n || bbox[3] < map.s)
                 continue
-            }
-            ctx.beginPath();
-            for(var p in data[d][1]) { // parts of the polygon
-                var polygon = data[d][1][p];
-                var coords = map.coord(polygon[0][0]/100, polygon[0][1]/100);
-                ctx.moveTo(coords[0], map.height - coords[1]);
-                for(var p = 1; p < polygon.length; p++) {
-                    coords = map.coord(polygon[p][0]/100, polygon[p][1]/100);
-                    ctx.lineTo(coords[0], map.height - coords[1]);
+            for(var offset = Math.floor((map.w+180) / 360)*360; offset <= Math.floor((map.e+180) / 360)*360; offset+=360) {
+                if(bbox[0] + offset > map.e || bbox[2] + offset < map.w) {
+                    continue
                 }
-            }
-            if(style.fillStyle) {
-                ctx.fill();
-            }
-            if(style.strokeStyle) {
-                ctx.stroke();
+                ctx.beginPath();
+                for(var p in data[d][1]) { // parts of the polygon
+                    var polygon = data[d][1][p];
+                    var coords = map.coord(polygon[0][0]/100+offset, polygon[0][1]/100);
+                    ctx.moveTo(coords[0], map.height - coords[1]);
+                    for(var p = 1; p < polygon.length; p++) {
+                        coords = map.coord(polygon[p][0]/100+offset, polygon[p][1]/100);
+                        ctx.lineTo(coords[0], map.height - coords[1]);
+                    }
+                }
+                if(style.fillStyle) {
+                    ctx.fill();
+                }
+                if(style.strokeStyle) {
+                    ctx.stroke();
+                }
             }
         }
     }
@@ -649,35 +749,54 @@ function GridData(res, data, style, grid) {
     
     // get the index of the cell at the given pixel coordinates (x,y)
     this.atCoord = function(x, y) {
-        var c = map.coord(x, y);
+        y = map.height - y;
         for(var g in grid) {
-            if(c[0] >= grid[g][1] && c <= grid[g][3] && c >= grid[g][0] && c <= grid[g][2]) {
-                return g;
+            var c1 = map.coord(grid[g][1], grid[g][0]);
+            var c2 = map.coord(grid[g][3], grid[g][2]);
+            if(x >= c1[0] && x <= c2[0] && y >= c1[1] && y <= c2[1]) {
+                return [g, grid[g], data[g]];
             }
         }
         return null;
     }
     
-    this.render = function(map, ctx) {
+    this.render = function(map, ctx, hObj) { //hObj: objects to highlight
         for(var s in style) {
             ctx[s] = style[s];
         }
+        console.log(hObj);
         for(var i = 0; i < data.length; i++) {
-            if(data[i] == NODATA || outOfBounds([grid[i][1], grid[i][0], grid[i][3], grid[i][2]], map))
-                continue; // no data
-            var start = map.coord(grid[i][1], grid[i][2]);
-            var end = map.coord(grid[i][3], grid[i][0]);
-            if(style.colorMap) {
-                var c = mapColor(data[i], range[0], range[1], style.colorMap);
-                if(c != null) {
-                    ctx.fillStyle = c;
-                    ctx.fillRect(start[0], map.height- start[1], end[0] - start[0], start[1] - end[1]);
+            if(data[i] == NODATA || grid[i][0] > map.n || grid[i][2] < map.s)
+                continue
+            if(hObj.indexOf(i) != -1) {
+                for(var s in style['highlight']) {
+                    ctx[s] = style['highlight'][s];
                 }
+                var highlit = true;
             }
-            else if(style.fillStyle)
-                ctx.fillRect(start[0], map.height- start[1], end[0] - start[0], start[1] - end[1]);
-            if(style.strokeStyle)
-                ctx.strokeRect(start[0], map.height- start[1], end[0] - start[0], start[1] - end[1]);
+            else
+                var highlit = false;
+            for(var offset = Math.floor((map.w+180) / 360)*360; offset <= Math.floor((map.e+180) / 360)*360; offset+=360) {
+                if(grid[i][1] + offset > map.e || grid[i][3] + offset < map.w)
+                    continue
+                var start = map.coord(grid[i][1]+offset, grid[i][2]);
+                var end = map.coord(grid[i][3]+offset, grid[i][0]);
+                if(style.colorMap) {
+                    var c = mapColor(data[i], range[0], range[1], style.colorMap);
+                    if(c != null) {
+                        ctx.fillStyle = c;
+                        ctx.fillRect(start[0], map.height- start[1], end[0] - start[0], start[1] - end[1]);
+                    }
+                    if(highlit) {
+                        ctx.strokeRect(start[0], map.height- start[1], end[0] - start[0], start[1] - end[1]);
+                    }
+
+                }
+                else if(style.fillStyle)
+                    ctx.fillRect(start[0], map.height- start[1], end[0] - start[0], start[1] - end[1]);
+                if(style.strokeStyle)
+                    ctx.strokeRect(start[0], map.height- start[1], end[0] - start[0], start[1] - end[1]);
+            }
         }
     }
 }
@@ -700,7 +819,7 @@ function UniformData(res, data, style) {
     }
     
     var range = computeRange(data);
-    this.render = function(map, ctx) {
+    this.render = function(map, ctx, hObj) { //hObj: objects to highlight
         var block_width = map.zoom * degperblock;
         for(var i = 0; i < data.length; i++) {
             for(var j = 0; j < data[i].length; j++) {
