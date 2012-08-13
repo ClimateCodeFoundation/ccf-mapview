@@ -36,32 +36,35 @@ function Chart(root) {
     
         if(this.chartType == 'year') {
             var array = [['x']];
-            if(data['step0'])
-                array[0].push('Step 0');
-            if(data['step1'])
-                array[0].push('Step 1');
-            if(data['step2'])
-                array[0].push('Step 2');
+            if(data['step2'] && data['step2']['months']) {
+                array[0].push('Temp.');
+                if(data['step1'] && data['step1']['months']) {
+                    if(data['step0'] && data['step0']['months']) {
+                        array[0].push('Step 1 Adj.');
+                    }
+                    array[0].push('Step 2 Adj.');
+                }
+            }
             for(var y = 1880; y <= 2010; y++) {
                 var stry = ''+y;
                 var point = [stry];
-                if(data['step0']) {
-                    if(data['step0'][stry]) {
-                        point.push(parseFloat(data['step0'][stry])/100);
-                    }
-                    else
-                        point.push(null);
-                }
-                if(data['step1']) {
-                    if(data['step1'][stry]) {
-                        point.push(parseFloat(data['step1'][stry])/100);
-                    }
-                    else
-                        point.push(null);
-                }
                 if(data['step2']) {
                     if(data['step2'][stry]) {
                         point.push(parseFloat(data['step2'][stry])/100);
+                    }
+                    else
+                        point.push(null);
+                }
+                if(data['step0'] && data['step1']) {
+                    if(data['step0'][stry] && data['step1'][stry]) {
+                        point.push(parseFloat(data['step1'][stry])/100 - parseFloat(data['step0'][stry])/100);
+                    }
+                    else
+                        point.push(null);
+                }
+                if(data['step1'] && data['step2']) {
+                    if(data['step1'][stry] && data['step2'][stry]) {
+                        point.push(parseFloat(data['step2'][stry])/100 - parseFloat(data['step1'][stry])/100);
                     }
                     else
                         point.push(null);
@@ -72,12 +75,15 @@ function Chart(root) {
         
         else if(this.chartType == 'month') {
             var array = [['x']];
-            if(data['step0'] && data['step0']['months'])
-                array[0].push('Step 0');
-            if(data['step1'] && data['step1']['months'])
-                array[0].push('Step 1');
-            if(data['step2'] && data['step2']['months'])
-                array[0].push('Step 2');
+            if(data['step2'] && data['step2']['months']) {
+                array[0].push('Temp.');
+                if(data['step1'] && data['step1']['months']) {
+                    if(data['step0'] && data['step0']['months']) {
+                        array[0].push('Step 1 Adj.');
+                    }
+                    array[0].push('Step 2 Adj.');
+                }
+            }
             if(array[0].length < 2) {
                 $(root).empty();
                 return;
@@ -86,23 +92,23 @@ function Chart(root) {
             for(var m in months) {
                 var strm = months[m]
                 var point = [strm];
-                if(data['step0']) {
-                    if(data['step0']['months']) {
-                        point.push(parseFloat(data['step0']['months'][m])/100);
-                    }
-                    else
-                        point.push(null);
-                }
-                if(data['step1']) {
-                    if(data['step1']['months']) {
-                        point.push(parseFloat(data['step1']['months'][m])/100);
-                    }
-                    else
-                        point.push(null);
-                }
                 if(data['step2']) {
                     if(data['step2']['months']) {
                         point.push(parseFloat(data['step2']['months'][m])/100);
+                    }
+                    else
+                        point.push(null);
+                }
+                if(data['step0'] && data['step1']) {
+                    if(data['step0']['months'] && data['step1']['months']) {
+                        point.push(parseFloat(data['step1']['months'][m])/100 - parseFloat(data['step0']['months'][m])/100);
+                    }
+                    else
+                        point.push(null);
+                }
+                if(data['step1'] && data['step2']) {
+                    if(data['step1']['months'] && data['step2']['months']) {
+                        point.push(parseFloat(data['step2']['months'][m])/100 - parseFloat(data['step1']['months'][m])/100);
                     }
                     else
                         point.push(null);
@@ -122,6 +128,12 @@ function Chart(root) {
         }
 
         // Create and draw the visualization.
-        new google.visualization.LineChart(root).draw(table, {curveType: "function", width: 500, height: 400, backgroundColor:{fill:'transparent'}, hAxis:{title:this.chartType}, vAxis:{title:'Degrees Celsius'}, title:title} );
+        new google.visualization.LineChart(root).draw(table, {curveType: "function", width: 500, height: 400, backgroundColor:{fill:'transparent'}, hAxis:{title:this.chartType}, vAxes:{0: {title:'Degrees (C)'}, 1: {title:'Adjustment (C)'}}, title:title, series:{0:{targetAxisIndex:0}, 1:{targetAxisIndex:1}, 2:{targetAxisIndex:1}}} );
+        /*
+        new google.visualization.LineChart(document.getElementById('visualization')).draw(data, {curveType: "function",width: 500, height: 400, vAxes: {0: {logScale: false}, 1: {logScale: false, maxValue: 10}}, series:{
+            0:{targetAxisIndex:0},
+            1:{targetAxisIndex:0},
+            2:{targetAxisIndex:1}}}
+        );*/
     };
 }

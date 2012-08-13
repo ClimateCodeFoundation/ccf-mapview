@@ -764,7 +764,6 @@ function GridData(res, data, style, grid) {
         for(var s in style) {
             ctx[s] = style[s];
         }
-        console.log(hObj);
         for(var i = 0; i < data.length; i++) {
             if(data[i] == NODATA || grid[i][0] > map.n || grid[i][2] < map.s)
                 continue

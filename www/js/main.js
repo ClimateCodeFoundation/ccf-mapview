@@ -368,6 +368,8 @@ function showStation(sid) {
         
         content += "<br/><a href='data/csv/s" + sid + ".csv' target='_blank'>Download data (CSV)</a>";
         
+        content += "<br/><br/>Step 1 adjustments indicate merged records, manual adjustments, and<br/>dropped partial or full records<br/>Step 2 adjusts for urbanization based on the deviation of urban station<br/>measurements from the trend among nearby rural stations<br/><br/>";
+        
         $('#annoText').html(content);
         chart.setData(data);
         chart.render();
