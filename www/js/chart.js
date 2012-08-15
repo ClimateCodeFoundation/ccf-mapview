@@ -36,10 +36,10 @@ function Chart(root) {
     
         if(this.chartType == 'year') {
             var array = [['x']];
-            if(data['step2'] && data['step2']['months']) {
+            if(data['step2'] && data['step2']) {
                 array[0].push('Temp.');
-                if(data['step1'] && data['step1']['months']) {
-                    if(data['step0'] && data['step0']['months']) {
+                if(data['step1'] && data['step1']) {
+                    if(data['step0'] && data['step0']) {
                         array[0].push('Step 1 Adj.');
                     }
                     array[0].push('Step 2 Adj.');
@@ -115,12 +115,27 @@ function Chart(root) {
                 }
                 array.push(point);
             }
-        }        
+        }
+        
+        if(this.chartType == 'cell') {
+            var array = [['x', 'Temp']];
+            for(var y = 1880; y <= 2010; y++) {
+                var stry = ''+y;
+                var point = [stry];
+                if(data[stry]) {
+                    point.push(parseFloat(data[stry])/100);
+                }
+                else
+                    point.push(null);
+                array.push(point);
+            }
+        }
+        
         // Create and populate the data table.
         var table = google.visualization.arrayToDataTable(array);
         
         var title = '';
-        if(this.chartType == 'year') {
+        if(this.chartType == 'year' || this.chartType == 'cell') {
             title = 'Temperature delta from baseline (1950 - 1980)';
         }
         else if(this.chartType == 'month') {

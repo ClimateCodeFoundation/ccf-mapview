@@ -20,9 +20,9 @@ land_years = {}
 mixed_years = {}
 for(var i = 1880; i < 2011; i++) {
     i = ''+i;
-    ocean_years[i] = 'data/ocean.' + i + '.grid.json';
-    land_years[i] = 'data/land.' + i + '.grid.json';
-    mixed_years[i] = 'data/mixed.' + i + '.grid.json';
+    ocean_years[i] = 'data/gz/ocean.' + i + '.grid.jgz';
+    land_years[i] = 'data/gz/land.' + i + '.grid.jgz';
+    mixed_years[i] = 'data/gz/mixed.' + i + '.grid.jgz';
 }
 
 // dynamic:
@@ -46,9 +46,9 @@ DATA = { // id: [[[resolution, filepath], [resolution, filepath], ...], fillcolo
                         'single',
                         'vector',
                         [
-                            [FAR, 'data/land.110.json'],
-                            [MEDIUM, 'data/land.50.json'],
-                            [CLOSE, 'data/land.10.json']
+                            [FAR, 'data/gz/land.110.jgz'],
+                            [MEDIUM, 'data/gz/land.50.jgz'],
+                            [CLOSE, 'data/gz/land.10.jgz']
                         ],
                         { fillStyle: '#99AA77' }
                     ]
@@ -58,9 +58,9 @@ DATA = { // id: [[[resolution, filepath], [resolution, filepath], ...], fillcolo
                         'single',
                         'vector',
                         [
-                            [FAR, 'data/rivers.110.json'],
-                            [MEDIUM, 'data/rivers.50.json'],
-                            [CLOSE, 'data/rivers.10.json']
+                            [FAR, 'data/gz/rivers.110.jgz'],
+                            [MEDIUM, 'data/gz/rivers.50.jgz'],
+                            [CLOSE, 'data/gz/rivers.10.jgz']
                         ],
                         { strokeStyle: '#0000FF', lineWidth: 0.5 }
                     ]
@@ -70,9 +70,9 @@ DATA = { // id: [[[resolution, filepath], [resolution, filepath], ...], fillcolo
                         'single',
                         'vector',
                         [
-                            [FAR, 'data/lakes.110.json'],
-                            [MEDIUM, 'data/lakes.50.json'],
-                            [CLOSE, 'data/lakes.10.json']
+                            [FAR, 'data/gz/lakes.110.jgz'],
+                            [MEDIUM, 'data/gz/lakes.50.jgz'],
+                            [CLOSE, 'data/gz/lakes.10.jgz']
                         ],
                         { fillStyle: '#0000FF', strokeStyle: '#AAAAFF', lineWidth: 0.5 }
                     ]
@@ -82,9 +82,9 @@ DATA = { // id: [[[resolution, filepath], [resolution, filepath], ...], fillcolo
                         'single',
                         'vector',
                         [
-                            [FAR, 'data/glaciers.110.json'],
-                            [MEDIUM, 'data/glaciers.50.json'],
-                            [CLOSE, 'data/glaciers.10.json']
+                            [FAR, 'data/gz/glaciers.110.jgz'],
+                            [MEDIUM, 'data/gz/glaciers.50.jgz'],
+                            [CLOSE, 'data/gz/glaciers.10.jgz']
                         ],
                         { fillStyle: '#DDDDFF' }
                     ]
@@ -94,9 +94,9 @@ DATA = { // id: [[[resolution, filepath], [resolution, filepath], ...], fillcolo
                         'single',
                         'vector',
                         [
-                            [FAR, 'data/countries.110.json'],
-                            [MEDIUM, 'data/countries.50.json'],
-                            [CLOSE, 'data/countries.10.json']
+                            [FAR, 'data/gz/countries.110.jgz'],
+                            [MEDIUM, 'data/gz/countries.50.jgz'],
+                            [CLOSE, 'data/gz/countries.10.jgz']
                         ],
                         { strokeStyle: '#FFFFFF', lineWidth: 1.0 }
                     ]
@@ -107,9 +107,9 @@ DATA = { // id: [[[resolution, filepath], [resolution, filepath], ...], fillcolo
                         'single',
                         'uniform',
                         [
-                            [FAR, 'data/topo.144.json'],
-                            [MEDIUM, 'data/topo.288.json'],
-                            [CLOSE, 'data/topo.1440.json']
+                            [FAR, 'data/gz/topo.144.jgz'],
+                            [MEDIUM, 'data/gz/topo.288.jgz'],
+                            [CLOSE, 'data/gz/topo.1440.jgz']
                         ],
                         { colorMap: [[null, 0, [0,0,150,1], [100,100,255,1]], [0, null, [140,200,100,1], [100,50,0,1]]] }
                     ]
@@ -119,9 +119,9 @@ DATA = { // id: [[[resolution, filepath], [resolution, filepath], ...], fillcolo
                         'single',
                         'uniform',
                         [
-                            [FAR, 'data/radiance.144.json'],
-                            [MEDIUM, 'data/radiance.288.json'],
-                            [CLOSE, 'data/radiance.1440.json']
+                            [FAR, 'data/gz/radiance.144.jgz'],
+                            [MEDIUM, 'data/gz/radiance.288.jgz'],
+                            [CLOSE, 'data/gz/radiance.1440.jgz']
                         ],
                         { colorMap: [[0, null, [255,0,0,0.3], [255,0,0,1]]] }
                     ]
@@ -132,7 +132,7 @@ DATA = { // id: [[[resolution, filepath], [resolution, filepath], ...], fillcolo
                         'single',
                         'grid',
                         [
-                            [FAR, 'data/ost2010.grid.json']
+                            [FAR, 'data/gz/ost2010.grid.jgz']
                         ],
                         { colorMap: TEMPCOLOR }
                     ]
@@ -142,7 +142,7 @@ DATA = { // id: [[[resolution, filepath], [resolution, filepath], ...], fillcolo
                         'single',
                         'grid',
                         [
-                            [FAR, 'data/lt2010.grid.json']
+                            [FAR, 'data/gz/lt2010.grid.jgz']
                         ],
                         { colorMap: TEMPCOLOR }
                     ]
@@ -152,7 +152,7 @@ DATA = { // id: [[[resolution, filepath], [resolution, filepath], ...], fillcolo
                         'single',
                         'grid',
                         [
-                            [FAR, 'data/landmask.grid.json']
+                            [FAR, 'data/gz/landmask.grid.jgz']
                         ],
                         { colorMap: [[0, null, [0,0,0,0.0], [0,0,0,0.3]]] }
                     ]
@@ -162,7 +162,7 @@ DATA = { // id: [[[resolution, filepath], [resolution, filepath], ...], fillcolo
                         'single',
                         'vector',
                         [
-                            [FAR, 'data/latlon.10.json']
+                            [FAR, 'data/gz/latlon.10.jgz']
                         ],
                         { strokeStyle: '#000000', lineWidth: 0.5 }
                     ]
@@ -206,7 +206,7 @@ DATA = { // id: [[[resolution, filepath], [resolution, filepath], ...], fillcolo
                         'single',
                         'point',
                         [
-                            [FAR, 'data/populated.110.json']
+                            [FAR, 'data/gz/populated.110.jgz']
                         ],
                         { strokeStyle: '#000000', fillStyle: '#FF0000', lineWidth: 0.5, textFill: '#000000' }
                     ]
@@ -217,7 +217,7 @@ DATA = { // id: [[[resolution, filepath], [resolution, filepath], ...], fillcolo
                         'single',
                         'point',
                         [
-                            [FAR, 'data/stations.json']
+                            [FAR, 'data/gz/stations.jgz']
                         ],
                         { classMap: {'C': {fillStyle: '#FF8800'}, 'B': {fillStyle: '#FFFF00'}, 'A':{fillStyle: '#00FF00'}, 'highlight':{fillStyle: '#0000FF'}}, strokeStyle: '#000000', lineWidth: 0.5 }
                     ]
@@ -304,14 +304,15 @@ function showStationCallback(sdata) {
     showStation(sid);
 }
 
-var RESTsid = null;
+var RESTchart = null;
 
-function showStation(sid) {
+function showStation(sid, addrest) {
     $('#anno').show();
+    $('#chartTypes').show();
     chart.clear();
     $('#annoText').text('Getting station data...');
     
-    JSON('data/stations/s' + sid + '.json', {'callback': function(data) {
+    JSON('data/gz/stations/s' + sid + '.jgz', {'callback': function(data) {
         var content = data['NAME'] + ' (' + data['ID'] + ')';
         
         // population class
@@ -366,33 +367,37 @@ function showStation(sid) {
         }
         */
         
-        content += "<br/><a href='data/csv/s" + sid + ".csv' target='_blank'>Download data (CSV)</a>";
+        content += "<br/><a href='csv/s" + sid + ".csv' target='_blank'>Download data (CSV)</a>";
         
         content += "<br/><br/>Step 1 adjustments indicate merged records, manual adjustments, and<br/>dropped partial or full records<br/>Step 2 adjusts for urbanization based on the deviation of urban station<br/>measurements from the trend among nearby rural stations<br/><br/>";
         
         $('#annoText').html(content);
         chart.setData(data);
-        chart.render();
+        chart.render(stationChartType);
         
     }}, {});
     
-    RESTsid = sid;
-    makeREST();
+    if(addrest != false) {
+        RESTchart = 's'+sid;
+        makeREST();
+    }
 }
 
 function changeChart(type) {
-    chart.render(type);
+    stationChartType = type;
+    chart.render(stationChartType);
 }
 
 function hideAnno() {
     $('#anno').hide();
     map.getLayer('stations').clearHighlight();
-    RESTsid = null;
+    RESTchart = null;
     makeREST();
 }
 
 var map;
 var chart;
+var stationChartType = 'year';
 
 function makeREST(addtohistory) {
     if(addtohistory == null)
@@ -420,8 +425,8 @@ function makeREST(addtohistory) {
     
     params['year'] = $('#yearval').text();
     
-    if(RESTsid)
-        params['station'] = '' + RESTsid;
+    if(RESTchart)
+        params['chart'] = RESTchart;
     
     params['zoom'] = '' + map.zoom.toFixed(2);
     
@@ -497,36 +502,61 @@ function showStationName(sdata) {
 function showCellCallback(cdata) {
     this.clearHighlight();
     this.highlight(parseInt(cdata[0]));
+    showCell(cdata[0]);
+}
+
+function showCell(cid, addrest) {
     $('#anno').show();
+    $('#chartTypes').hide();
     chart.clear();
     $('#annoText').text('Getting cell data...');
     
-    JSON('data/sbx/cell' + cdata[0] + '.json', {'callback': function(data) {
-        var content = 'Cell: ' + cdata[1];
+    JSON('data/gz/sbx/cell' + cid + '.jgz', {'callback': function(data) {
+        c = [data['coords'][0].toFixed(2), data['coords'][1].toFixed(2), data['coords'][2].toFixed(2), data['coords'][3].toFixed(2)];
+        //c = [cdata[1][0], cdata[1][1], cdata[1][2], cdata[1][3]];
+        for(var i in c) {
+            if(c[i] < 0) {
+                if(i % 2 == 0)
+                    c[i] = c[i]*-1 + 'S';
+                else
+                    c[i] = c[i]*-1 + 'W';
+            }
+            else {
+                if(i % 2 == 0)
+                    c[i] = c[i] + 'N';
+                else
+                    c[i] = c[i] + 'E';
+            }
+        }
+        var content = 'Cell: ' + c[0]+' '+c[1]+' -> '+c[2]+' '+c[3];
         
         var contributors = data['contributors'];
+        contributors.sort(function(a,b){return b[1]-a[1]});
         content += '<br/>Contributing stations:';
-        content += '<br/><div style="display:inline-block; overflow:auto; height: 300px; width: 300px">';
+        content += '<br/><div style="display:inline-block; overflow:auto; height: 150px; width: 300px">';
         for(var c in contributors) {
             if(c > 0)
                 content += '<br/>';
-            content += '&nbsp;&nbsp;&nbsp;' + contributors[c][0] + ' (weight: ' + contributors[c][1].toFixed(2) + ')';
+            content += '&nbsp;&nbsp;&nbsp;'
+            if(contributors[c].length > 2) { // we have a station name
+                content += '<a onclick="showStation(' + contributors[c][0].substring(0,contributors[c][0].length-1) + ')" class="link">' + contributors[c][2] + '</a>';
+            }
+            else { // no record
+                content += ''+contributors[c][0];
+            }
+            content += '(weight: ' + contributors[c][1].toFixed(2) + ')';
         }
         content += '</div>';
         
-        /*
-        for(var d in data) {
-            content += "<br/>" + d + ": " + data[d];
-        }
-        */
-        
         $('#annoText').html(content);
-        //chart.setData(data);
-        //chart.render();
+        chart.setData(data);
+        chart.render('cell');
         
     }}, {});
-    
-    makeREST();
+    if(addrest != false) {
+        RESTchart = 'c'+cid;
+        makeREST();
+    }
 }
 
 // - this will be called in the scope of the layer
@@ -536,7 +566,22 @@ function showCellCoords(cdata) {
     tmp = cdata[2]; // cell temperature
     pt = [coords[1], coords[2]];
     // here, 'this' is the temp layer
-    this.showText(pt, '('+coords[0]+','+coords[1]+') > ('+coords[2]+','+coords[3]+')', {'textBaseline':'top'});
+    c = [coords[0], coords[1], coords[2], coords[3]];
+    for(var i in c) {
+        if(c[i] < 0) {
+            if(i % 2 == 0)
+                c[i] = c[i]*-1 + 'S';
+            else
+                c[i] = c[i]*-1 + 'W';
+        }
+        else {
+            if(i % 2 == 0)
+                c[i] = c[i] + 'N';
+            else
+                c[i] = c[i] + 'E';
+        }
+    }
+    this.showText(pt, c[0]+' '+c[1]+' -> '+c[2]+' '+c[3], {'textBaseline':'top'});
 }
 
 // get and process REST parameters, if they exist
@@ -670,8 +715,13 @@ function rest() {
             }
         }
     }
-    if(QueryString['station']) {
-        showStation(QueryString['station']);
+    if(QueryString['chart']) {
+        if(QueryString['chart'].charAt(0) == 's') {
+            showStation(QueryString['chart'].substring(1), false);
+        }
+        else if(QueryString['chart'].charAt(0) == 'c') {
+            showCell(QueryString['chart'].substring(1), false);
+        }
     }
 }
 

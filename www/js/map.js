@@ -152,6 +152,18 @@ function CanvasMap(container, zoom) {
             this.n = n;
         if(e != null)
             this.e = e;
+        
+        // clamp N-S
+        var offset = 0;
+        if(this.n > 90 && this.s > -1 * this.n) {
+            offset = Math.max(90 - this.n, (this.n - this.s)/2 - this.n);
+        }
+        if(this.s < -90 && this.n < -1 * this.s) {
+            offset = Math.min(-90 - this.s, (this.s - this.n)/2 - this.s);
+        }
+        this.n += offset;
+        this.s += offset;
+        
         for(var l in this.layers) {
             this.redoLayer(l);
         }

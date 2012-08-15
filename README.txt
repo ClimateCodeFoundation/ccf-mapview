@@ -17,25 +17,33 @@ Concieved and executed as a part of the Google Summer of Code 2012.
 
 ==System Requirements==
 
-For the included simple web server:
- Python 2.6.*, 2.7.* (not tested on previous versions or 3.*)
- Tested on Ubuntu 10.04, but it should work pretty much anywhere with
-  the included Python web server.
 Client:
  Tested:
     Ubuntu / Google Chrome
     Ubuntu / Firefox
  Most any modern web browser should be fine, mozilla and webkit for
-  sure. IE pre-8 or 9 are unlikely to perform favorably.
+ sure. IE pre-8 or 9 are unlikely to perform favorably.
+
+Server:
+ Almost any server should work. The only tricky part is setting the
+ encoding on the compressed data files (see Installation).
 
 
 ==Installation==
 
-1. Extract the archive anywhere
-2. Run "python PythonCGIServer.py PORT"
-3. Try it at http://localhost:PORT/
+ Extract to any directory under a web server (Apache is known to work)
 
--or-
+ Modify the configuration to set the content-type and content-encoding
+ of our data files.
+ 
+ Content-type header for .jgz files should be "text/json"
+ Content-encoding should be "gzip"
+ 
+ 
+ The following works for Apache:
 
-1. Extract to any directory under a web server (Apache is known to work)
-2. Try it at http://foo/bar/ or whatever the case may be
+ Set these directives in your configuration file where they will take
+ effect on the data/gz directory.
+ 
+    AddEncoding gzip .jgz
+    AddType text/json .jgz

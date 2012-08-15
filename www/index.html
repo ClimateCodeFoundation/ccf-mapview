@@ -59,6 +59,9 @@
                 <br/>
                 <div onclick='toggle_box(this, "about")' class='link' id='more' style='display:block'>More &gt;</div>
                 <div id='about' class='popup' style='width:400px'>
+                    <a href='doc.html'>What is this? How do I use it?</a>
+                    <br/>
+                    <br/>
                     This is a map visualization of <a href='http://code.google.com/p/ccc-gistemp/' target='_blank'>ccc-gistemp</a>, the <a href='http://climatecode.org/' target='_blank'>Climate Code Foundation</a>'s implementation of the NASA Goddard Institute for Space Studies (GISS) Surface Temperature Analysis (<a href='http://data.giss.nasa.gov/gistemp/' target='_blank'>GISTEMP<a/>).
                     <br/>
                     <br/>
@@ -169,7 +172,7 @@
             <div class='closeBtn' onclick='hideAnno()'>X</div>
             <div id='annoText' style='display:inline-block'></div>
             <br/>
-            <input type='radio' name='graphType' value='year' checked onclick='changeChart("year")'> Yearly  <input type='radio' name='graphType' value='month' onclick='changeChart("month")'> Monthly
+            <div id='chartTypes' style='display:inline-block'><input type='radio' name='graphType' value='year' checked onclick='changeChart("year")'> Yearly  <input type='radio' name='graphType' value='month' onclick='changeChart("month")'> Monthly</div>
             <br/>
             <div id='annoGraph' style='display:inline-block; width:500px'></div> <!-- for google chart API -->
         </div>

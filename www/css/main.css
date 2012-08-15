@@ -60,6 +60,7 @@ body {
     overflow: hidden;
     z-index: 0;
     background-color: #AABBFF; /* this will be the ocean base background color */
+    cursor: move;
 }
 
 canvas.layer {
@@ -71,6 +72,7 @@ canvas.layer {
     left: 0px;
     top: 0px;
     overflow: hidden;
+    cursor: move;
 }
 
 /*

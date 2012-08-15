@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<head>
+<title>CCF MapView Documentation</title>
+<style>
+body {
+    font-family: helvetica, sans;
+}
+</style>
+</head>
+<body>
+
+<h1>CCF MapView</h1>
+
+<a href='http://climatecode.org'>Climate Code Foundation</a>
+
+<p>
+This tool was created by <a href='http://cs.unc.edu/~jrwang'>Jeremy</a> as a part of the <a href='http://www.google-melange.com/gsoc/homepage/google/gsoc2012'>Google Summer of Code 2012<a/>.
+</p>
+
+<h2>What is this?</h2>
+
+<p>
+This is a map visualization of <a href='http://code.google.com/p/ccc-gistemp/' target='_blank'>ccc-gistemp</a>, the Climate Code Foundation's implementation of the NASA Goddard Institute for Space Studies (GISS) Surface Temperature Analysis (<a href='http://data.giss.nasa.gov/gistemp/' target='_blank'>GISTEMP<a/>).
+</p>
+
+<p>
+The map shows global yearly temperatures from 1880 to 2010, represented as the difference from the baseline period (1950 - 1980). You can choose from temperature sets computed over land (by fixed land-based climate stations), over the ocean, or the full mixed set. Other available data include major population centers and weather stations.
+</p>
+
+<p>
+This project is open source under the MIT License and available at <a href='http://code.google.com/p/ccf-mapview' target='_blank'>code.google.com/p/ccf-mapview</a>. We use <a href='http://www.naturalearthdata.com' target='_blank'>Natural Earth Data</a>, which is a great resource and in the public domain. Parts of the rendering were inspired by <a href='https://github.com/RandomEtc/shapefile-js' target='_blank'>shapefile-js</a>. If you have comments, questions, feedback, or want to contribute, we can be found at <a href='http://code.google.com/p/ccf-mapview' target='_blank'>code.google.com/p/ccf-mapview</a>.
+</p>
+
+<h2>How do I use it?</h2>
+
+<h3>It's a map</h3>
+<p>
+Click and drag to move the map. Zoom by using the [+] and [-] buttons, the mouse wheel, or by double clicking on the map.
+</p>
+<h3>I want to see the weather stations</h3>
+<p>
+Click "weather stations" on the left.
+<img src='img/doc/wsbtn.png'/>
+You should see many tiny squares - each indicates one weather station. Click on any station dot to see information about that station and the historical temperature as measured at that location.
+</p>
+<p>
+<img src='img/doc/sclick.png'/>
+</p>
+<h3>I want to see the global/historical temperature</h3>
+<p>
+Click "Ocean", "Land", or "Mixed" on the left (mixed is recommended).
+</p>
+<p>
+<img src='img/doc/mbtn.png'/>
+</p>
+<p>
+You'll see a red, white, and blue grid covering the map - these colors indicate the temperature relative to the baseline period average (1950-1980). Red is warmer and blue is cooler. Click anywhere on the map to see more detailed information about that region, including the nearby weather stations and the temperature record at that location.
+</p>
+<p>
+<img src='img/doc/cclick.png'/>
+</p>
+<p>
+You can see historical temperatures by changing the year shown - drag the slider under the year backward or forward (initially it is set to 2010) or click the left (&lt;) and right (&gt;) arrows to skip year by year. You should see the temperature colors change as you do. To see how the climate has changed over the past 130 years, move the year slider all the way back to 1880 then click "Play".
+</p>
+
+<h2>It's broken!</h2>
+
+<p>
+If it is NOT WORKING in any way, please try a modern browser. Good ones include the most recent version of Google Chrome, Mozilla Firefox, or Safari. Older versions of Internet Explorer are especially likely to fail and are not recommended. If you are still having problems, please <a href='http://code.google.com/p/ccf-mapview' target='_blank'>contact us</a>.
+</p>
+
+</body>
+</html>
