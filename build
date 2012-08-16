@@ -1,0 +1,6 @@
+#!/bin/bash
+
+cd ccc-gistemp
+python tool/run.py
+cd ..
+python make_data.py

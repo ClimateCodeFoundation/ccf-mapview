@@ -1,8 +1,6 @@
 /*
  Copyright (c) 2012 Climate Code Foundation (climatecode.org)
  Licensed under the MIT License (LICENSE.txt)
- 
- Version 0.1.0
 */
 
 /*
@@ -144,11 +142,6 @@ function Chart(root) {
 
         // Create and draw the visualization.
         new google.visualization.LineChart(root).draw(table, {curveType: "function", width: 500, height: 400, backgroundColor:{fill:'transparent'}, hAxis:{title:this.chartType}, vAxes:{0: {title:'Degrees (C)'}, 1: {title:'Adjustment (C)'}}, title:title, series:{0:{targetAxisIndex:0}, 1:{targetAxisIndex:1}, 2:{targetAxisIndex:1}}} );
-        /*
-        new google.visualization.LineChart(document.getElementById('visualization')).draw(data, {curveType: "function",width: 500, height: 400, vAxes: {0: {logScale: false}, 1: {logScale: false, maxValue: 10}}, series:{
-            0:{targetAxisIndex:0},
-            1:{targetAxisIndex:0},
-            2:{targetAxisIndex:1}}}
-        );*/
+
     };
 }

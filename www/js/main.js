@@ -1,8 +1,6 @@
 /*
  Copyright (c) 2012 Climate Code Foundation (climatecode.org)
  Licensed under the MIT License (LICENSE.txt)
- 
- Version 0.1.0
 */
 
 NODATA = 9999;
@@ -20,9 +18,9 @@ land_years = {}
 mixed_years = {}
 for(var i = 1880; i < 2011; i++) {
     i = ''+i;
-    ocean_years[i] = 'data/gz/ocean.' + i + '.grid.jgz';
-    land_years[i] = 'data/gz/land.' + i + '.grid.jgz';
-    mixed_years[i] = 'data/gz/mixed.' + i + '.grid.jgz';
+    ocean_years[i] = 'data/gz/temp/ocean.' + i + '.grid.jgz';
+    land_years[i] = 'data/gz/temp/land.' + i + '.grid.jgz';
+    mixed_years[i] = 'data/gz/temp/mixed.' + i + '.grid.jgz';
 }
 
 // dynamic:
@@ -40,76 +38,76 @@ TEMPCOLOR = [[null, -500, [0, 0, 180, 0.7], [0, 0, 180, 0.7]],
              [100, 500, [255, 100, 100, 0.7], [180, 0, 0, 0.7]],
              [500, null, [180, 0, 0, 0.7], [180, 0, 0, 0.7]]];
 
-DATA = { // id: [[[resolution, filepath], [resolution, filepath], ...], fillcolor, outlinecolor, outlineonly, dontclose] - ...false, false is a normal filled polygon
+DATA = { // id: [single/multi, display type, [[resolution, filepath], [resolution, filepath], ...], style map]
     'land':     [
                     [
                         'single',
                         'vector',
                         [
-                            [FAR, 'data/gz/land.110.jgz'],
-                            [MEDIUM, 'data/gz/land.50.jgz'],
-                            [CLOSE, 'data/gz/land.10.jgz']
+                            [FAR, 'data/gz/static/land.110.jgz'],
+                            [MEDIUM, 'data/gz/static/land.50.jgz'],
+                            [CLOSE, 'data/gz/static/land.10.jgz']
                         ],
                         { fillStyle: '#99AA77' }
                     ]
-                ], // #202020 light greenish
+                ],
     'rivers':   [
                     [
                         'single',
                         'vector',
                         [
-                            [FAR, 'data/gz/rivers.110.jgz'],
-                            [MEDIUM, 'data/gz/rivers.50.jgz'],
-                            [CLOSE, 'data/gz/rivers.10.jgz']
+                            [FAR, 'data/gz/static/rivers.110.jgz'],
+                            [MEDIUM, 'data/gz/static/rivers.50.jgz'],
+                            [CLOSE, 'data/gz/static/rivers.10.jgz']
                         ],
                         { strokeStyle: '#0000FF', lineWidth: 0.5 }
                     ]
-                ], // #9DC3E0 blue
+                ],
     'lakes':    [
                     [
                         'single',
                         'vector',
                         [
-                            [FAR, 'data/gz/lakes.110.jgz'],
-                            [MEDIUM, 'data/gz/lakes.50.jgz'],
-                            [CLOSE, 'data/gz/lakes.10.jgz']
+                            [FAR, 'data/gz/static/lakes.110.jgz'],
+                            [MEDIUM, 'data/gz/static/lakes.50.jgz'],
+                            [CLOSE, 'data/gz/static/lakes.10.jgz']
                         ],
                         { fillStyle: '#0000FF', strokeStyle: '#AAAAFF', lineWidth: 0.5 }
                     ]
-                ], // #9DC3E0 blue
+                ],
     'glaciers': [
                     [
                         'single',
                         'vector',
                         [
-                            [FAR, 'data/gz/glaciers.110.jgz'],
-                            [MEDIUM, 'data/gz/glaciers.50.jgz'],
-                            [CLOSE, 'data/gz/glaciers.10.jgz']
+                            [FAR, 'data/gz/static/glaciers.110.jgz'],
+                            [MEDIUM, 'data/gz/static/glaciers.50.jgz'],
+                            [CLOSE, 'data/gz/static/glaciers.10.jgz']
                         ],
                         { fillStyle: '#DDDDFF' }
                     ]
-                ], // very light blue (blue-white, ice)
+                ],
     'countries':[
                     [
                         'single',
                         'vector',
                         [
-                            [FAR, 'data/gz/countries.110.jgz'],
-                            [MEDIUM, 'data/gz/countries.50.jgz'],
-                            [CLOSE, 'data/gz/countries.10.jgz']
+                            [FAR, 'data/gz/static/countries.110.jgz'],
+                            [MEDIUM, 'data/gz/static/countries.50.jgz'],
+                            [CLOSE, 'data/gz/static/countries.10.jgz']
                         ],
                         { strokeStyle: '#FFFFFF', lineWidth: 1.0 }
                     ]
-                ], //#000000
+                ],
     
     'topo':     [
                     [
                         'single',
                         'uniform',
                         [
-                            [FAR, 'data/gz/topo.144.jgz'],
-                            [MEDIUM, 'data/gz/topo.288.jgz'],
-                            [CLOSE, 'data/gz/topo.1440.jgz']
+                            [FAR, 'data/gz/static/topo.144.jgz'],
+                            [MEDIUM, 'data/gz/static/topo.288.jgz'],
+                            [CLOSE, 'data/gz/static/topo.1440.jgz']
                         ],
                         { colorMap: [[null, 0, [0,0,150,1], [100,100,255,1]], [0, null, [140,200,100,1], [100,50,0,1]]] }
                     ]
@@ -119,42 +117,11 @@ DATA = { // id: [[[resolution, filepath], [resolution, filepath], ...], fillcolo
                         'single',
                         'uniform',
                         [
-                            [FAR, 'data/gz/radiance.144.jgz'],
-                            [MEDIUM, 'data/gz/radiance.288.jgz'],
-                            [CLOSE, 'data/gz/radiance.1440.jgz']
+                            [FAR, 'data/gz/static/radiance.144.jgz'],
+                            [MEDIUM, 'data/gz/static/radiance.288.jgz'],
+                            [CLOSE, 'data/gz/static/radiance.1440.jgz']
                         ],
                         { colorMap: [[0, null, [255,0,0,0.3], [255,0,0,1]]] }
-                    ]
-                ],
-    
-    'ost2010':  [
-                    [
-                        'single',
-                        'grid',
-                        [
-                            [FAR, 'data/gz/ost2010.grid.jgz']
-                        ],
-                        { colorMap: TEMPCOLOR }
-                    ]
-                ],
-    'lt2010':   [
-                    [
-                        'single',
-                        'grid',
-                        [
-                            [FAR, 'data/gz/lt2010.grid.jgz']
-                        ],
-                        { colorMap: TEMPCOLOR }
-                    ]
-                ],
-    'landmask': [
-                    [
-                        'single',
-                        'grid',
-                        [
-                            [FAR, 'data/gz/landmask.grid.jgz']
-                        ],
-                        { colorMap: [[0, null, [0,0,0,0.0], [0,0,0,0.3]]] }
                     ]
                 ],
     'coordinates': [
@@ -162,7 +129,7 @@ DATA = { // id: [[[resolution, filepath], [resolution, filepath], ...], fillcolo
                         'single',
                         'vector',
                         [
-                            [FAR, 'data/gz/latlon.10.jgz']
+                            [FAR, 'data/gz/static/latlon.10.jgz']
                         ],
                         { strokeStyle: '#000000', lineWidth: 0.5 }
                     ]
@@ -206,7 +173,7 @@ DATA = { // id: [[[resolution, filepath], [resolution, filepath], ...], fillcolo
                         'single',
                         'point',
                         [
-                            [FAR, 'data/gz/populated.110.jgz']
+                            [FAR, 'data/gz/static/populated.110.jgz']
                         ],
                         { strokeStyle: '#000000', fillStyle: '#FF0000', lineWidth: 0.5, textFill: '#000000' }
                     ]
@@ -224,6 +191,9 @@ DATA = { // id: [[[resolution, filepath], [resolution, filepath], ...], fillcolo
                 ],
 }
 
+/*
+    Shows and hides popup/popout information boxes
+*/
 function toggle_box(btn, id) {
     var a = $('#' + id);
     var $btn = $(btn);
@@ -243,6 +213,9 @@ function toggle_box(btn, id) {
     }
 }
 
+/*
+    Changes the displayed year
+*/
 function changeYear(delta) {
     var currYear = parseInt($('#year').val());
     if(currYear + delta >= 1880 && currYear + delta <= 2010){
@@ -258,6 +231,9 @@ function changeYear(delta) {
     makeREST();
 }
 
+/*
+    Pseudo-movie/animation controls
+*/
 function frame() {
     if(changeYear(1))
         movieTimeout = setTimeout(frame, 200);
@@ -294,17 +270,21 @@ function attacher() {
     }
 }
 
-// show a popup of station annotation (and maybe graph)
-// given a station id (sid) - an internal index into the station list, nothing meaningful
-// - this will be called in the scope of the map
+/*
+    Chart controls and displays for stations and grid cells (sub-boxes)
+*/
+
+var RESTchart = null; // indicator for the contents of the chart in the URL
+
+// show a popup of station annotation and chart
+// given a station id (sid)
+// - this will be called in the scope of the station layer
 function showStationCallback(sdata) {
     sid = sdata[3]; // station ID
     this.clearHighlight();
     this.highlight(sdata);
     showStation(sid);
 }
-
-var RESTchart = null;
 
 function showStation(sid, addrest) {
     $('#anno').show();
@@ -361,13 +341,8 @@ function showStation(sid, addrest) {
         if(data['POPSIZ'] && data['POPSIZ'] > 0) {
             content += '<br/>' + Math.max(parseFloat(data['TOWNDIS']), 0.0) + 'km from town/city of ' + data['POPSIZ'] + '000 people';
         }
-        /*
-        for(var d in data) {
-            content += "<br/>" + d + ": " + data[d];
-        }
-        */
         
-        content += "<br/><a href='csv/s" + sid + ".csv' target='_blank'>Download data (CSV)</a>";
+        content += "<br/><a href='data/csv/s" + sid + ".csv' target='_blank'>Download data (CSV)</a>";
         
         content += "<br/><br/>Step 1 adjustments indicate merged records, manual adjustments, and<br/>dropped partial or full records<br/>Step 2 adjusts for urbanization based on the deviation of urban station<br/>measurements from the trend among nearby rural stations<br/><br/>";
         
@@ -383,21 +358,76 @@ function showStation(sid, addrest) {
     }
 }
 
+function showCellCallback(cdata) {
+    this.clearHighlight();
+    this.highlight(parseInt(cdata[0]));
+    showCell(cdata[0]);
+}
+
+function showCell(cid, addrest) {
+    $('#anno').show();
+    $('#chartTypes').hide();
+    chart.clear();
+    $('#annoText').text('Getting cell data...');
+    
+    JSON('data/gz/sbx/cell' + cid + '.jgz', {'callback': function(data) {
+        c = [data['coords'][0].toFixed(2), data['coords'][1].toFixed(2), data['coords'][2].toFixed(2), data['coords'][3].toFixed(2)];
+        //c = [cdata[1][0], cdata[1][1], cdata[1][2], cdata[1][3]];
+        for(var i in c) {
+            if(c[i] < 0) {
+                if(i % 2 == 0)
+                    c[i] = c[i]*-1 + 'S';
+                else
+                    c[i] = c[i]*-1 + 'W';
+            }
+            else {
+                if(i % 2 == 0)
+                    c[i] = c[i] + 'N';
+                else
+                    c[i] = c[i] + 'E';
+            }
+        }
+        var content = 'Cell: ' + c[0]+' '+c[1]+' -> '+c[2]+' '+c[3];
+        
+        var contributors = data['contributors'];
+        contributors.sort(function(a,b){return b[1]-a[1]});
+        content += '<br/>Contributing stations:';
+        content += '<br/><div style="display:inline-block; overflow:auto; height: 150px; width: 300px">';
+        for(var c in contributors) {
+            if(c > 0)
+                content += '<br/>';
+            content += '&nbsp;&nbsp;&nbsp;'
+            if(contributors[c].length > 2) { // we have a station name
+                content += '<a onclick="showStation(' + contributors[c][0] + ')" class="link">' + contributors[c][2] + '</a>';
+            }
+            else { // no record
+                content += ''+contributors[c][0];
+            }
+            content += '(weight: ' + contributors[c][1].toFixed(2) + ')';
+        }
+        content += '</div>';
+        
+        $('#annoText').html(content);
+        chart.setData(data);
+        chart.render('cell');
+        
+    }}, {});
+    if(addrest != false) {
+        RESTchart = 'c'+cid;
+        makeREST();
+    }
+}
+
 function changeChart(type) {
     stationChartType = type;
     chart.render(stationChartType);
 }
 
-function hideAnno() {
-    $('#anno').hide();
-    map.getLayer('stations').clearHighlight();
-    RESTchart = null;
-    makeREST();
-}
-
-var map;
-var chart;
-var stationChartType = 'year';
+/*
+    REST interface controls
+    makeREST - construct a URL
+    rest - make the map match a URL
+*/
 
 function makeREST(addtohistory) {
     if(addtohistory == null)
@@ -452,136 +482,6 @@ function makeREST(addtohistory) {
         window.history.pushState(params, "state", url);
     else
         window.history.replaceState(params, "state", url);
-}
-
-// handle history state changes
-window.onpopstate = function(event) {  
-    rest();
-};
-
-function init() {
-    // start with 3 layers, zoom 4x (4 pixels per degree)
-    map = new CanvasMap(document.getElementById('map'), 4); //(container, numLayers, zoom) where zoom indicates pixels per degree
-    for(var i in LAYERS) {
-        var l = LAYERS[i];
-        map.addLayer(l, DATA[l]);
-        
-        // attach callback to stations layer to capture clicks
-        // and display annotation in a popup
-        if(l == 'stations') {
-            map.onclick(l, showStationCallback);
-            map.onmousemove(l, showStationName);
-        }
-        
-        if(l == 'oceanTemp' || l == 'landTemp' || l == 'mixedTemp') {
-            map.onclick(l, showCellCallback);
-            map.onmousemove(l, showCellCoords);
-        }
-    }
-    map.show('land');
-    map.show('rivers');
-    map.show('lakes');
-    map.show('glaciers');
-    map.show('countries');
-    map.update();
-    
-    // init chart
-    chart = new Chart(document.getElementById('annoGraph'));
-    rest();
-}
-
-// - this will be called in the scope of the layer
-function showStationName(sdata) {
-    pt = [sdata[0][0]/100, sdata[0][1]/100]; // station coordinates
-    sname = sdata[1]; // station name
-    sid = sdata[3]; // station ID
-    // here, 'this' is the station layer
-    this.showText(pt, sname);
-}
-
-function showCellCallback(cdata) {
-    this.clearHighlight();
-    this.highlight(parseInt(cdata[0]));
-    showCell(cdata[0]);
-}
-
-function showCell(cid, addrest) {
-    $('#anno').show();
-    $('#chartTypes').hide();
-    chart.clear();
-    $('#annoText').text('Getting cell data...');
-    
-    JSON('data/gz/sbx/cell' + cid + '.jgz', {'callback': function(data) {
-        c = [data['coords'][0].toFixed(2), data['coords'][1].toFixed(2), data['coords'][2].toFixed(2), data['coords'][3].toFixed(2)];
-        //c = [cdata[1][0], cdata[1][1], cdata[1][2], cdata[1][3]];
-        for(var i in c) {
-            if(c[i] < 0) {
-                if(i % 2 == 0)
-                    c[i] = c[i]*-1 + 'S';
-                else
-                    c[i] = c[i]*-1 + 'W';
-            }
-            else {
-                if(i % 2 == 0)
-                    c[i] = c[i] + 'N';
-                else
-                    c[i] = c[i] + 'E';
-            }
-        }
-        var content = 'Cell: ' + c[0]+' '+c[1]+' -> '+c[2]+' '+c[3];
-        
-        var contributors = data['contributors'];
-        contributors.sort(function(a,b){return b[1]-a[1]});
-        content += '<br/>Contributing stations:';
-        content += '<br/><div style="display:inline-block; overflow:auto; height: 150px; width: 300px">';
-        for(var c in contributors) {
-            if(c > 0)
-                content += '<br/>';
-            content += '&nbsp;&nbsp;&nbsp;'
-            if(contributors[c].length > 2) { // we have a station name
-                content += '<a onclick="showStation(' + contributors[c][0].substring(0,contributors[c][0].length-1) + ')" class="link">' + contributors[c][2] + '</a>';
-            }
-            else { // no record
-                content += ''+contributors[c][0];
-            }
-            content += '(weight: ' + contributors[c][1].toFixed(2) + ')';
-        }
-        content += '</div>';
-        
-        $('#annoText').html(content);
-        chart.setData(data);
-        chart.render('cell');
-        
-    }}, {});
-    if(addrest != false) {
-        RESTchart = 'c'+cid;
-        makeREST();
-    }
-}
-
-// - this will be called in the scope of the layer
-function showCellCoords(cdata) {
-    cellid = cdata[0];
-    coords = cdata[1]; // cell coordinates [s,w,n,e]
-    tmp = cdata[2]; // cell temperature
-    pt = [coords[1], coords[2]];
-    // here, 'this' is the temp layer
-    c = [coords[0], coords[1], coords[2], coords[3]];
-    for(var i in c) {
-        if(c[i] < 0) {
-            if(i % 2 == 0)
-                c[i] = c[i]*-1 + 'S';
-            else
-                c[i] = c[i]*-1 + 'W';
-        }
-        else {
-            if(i % 2 == 0)
-                c[i] = c[i] + 'N';
-            else
-                c[i] = c[i] + 'E';
-        }
-    }
-    this.showText(pt, c[0]+' '+c[1]+' -> '+c[2]+' '+c[3], {'textBaseline':'top'});
 }
 
 // get and process REST parameters, if they exist
@@ -725,6 +625,97 @@ function rest() {
     }
 }
 
+// handle history state changes
+window.onpopstate = function(event) {  
+    rest();
+};
+
+/*
+    Generic startup and variables to create the map and chart
+*/
+var map;
+var chart;
+var stationChartType = 'year';
+
+function init() {
+    // start with 3 layers, zoom 4x (4 pixels per degree)
+    map = new CanvasMap(document.getElementById('map'), 4); //(container, numLayers, zoom) where zoom indicates pixels per degree
+    for(var i in LAYERS) {
+        var l = LAYERS[i];
+        map.addLayer(l, DATA[l]);
+        
+        // attach callback to stations layer to capture clicks
+        // and display annotation in a popup
+        if(l == 'stations') {
+            map.onclick(l, showStationCallback);
+            map.onmousemove(l, showStationName);
+        }
+        
+        if(l == 'oceanTemp' || l == 'landTemp' || l == 'mixedTemp') {
+            map.onclick(l, showCellCallback);
+            map.onmousemove(l, showCellCoords);
+        }
+    }
+    map.show('land');
+    map.show('rivers');
+    map.show('lakes');
+    map.show('glaciers');
+    map.show('countries');
+    map.update();
+    
+    // init chart
+    chart = new Chart(document.getElementById('annoGraph'));
+    rest();
+}
+
+function hideAnno() {
+    $('#anno').hide();
+    map.getLayer('stations').clearHighlight();
+    RESTchart = null;
+    makeREST();
+}
+
+/*
+    These capture mouseover events and show overlay data for
+    stations and grid cells
+*/
+// - this will be called in the scope of the layer
+function showStationName(sdata) {
+    pt = [sdata[0][0]/100, sdata[0][1]/100]; // station coordinates
+    sname = sdata[1]; // station name
+    sid = sdata[3]; // station ID
+    // here, 'this' is the station layer
+    this.showText(pt, sname);
+}
+
+// - this will be called in the scope of the layer
+function showCellCoords(cdata) {
+    cellid = cdata[0];
+    coords = cdata[1]; // cell coordinates [s,w,n,e]
+    tmp = cdata[2]; // cell temperature
+    pt = [coords[1], coords[2]];
+    // here, 'this' is the temp layer
+    c = [coords[0], coords[1], coords[2], coords[3]];
+    for(var i in c) {
+        if(c[i] < 0) {
+            if(i % 2 == 0)
+                c[i] = c[i]*-1 + 'S';
+            else
+                c[i] = c[i]*-1 + 'W';
+        }
+        else {
+            if(i % 2 == 0)
+                c[i] = c[i] + 'N';
+            else
+                c[i] = c[i] + 'E';
+        }
+    }
+    this.showText(pt, c[0]+' '+c[1]+' -> '+c[2]+' '+c[3], {'textBaseline':'top'});
+}
+
+/*
+    More UI controls
+*/
 
 var radios = ['oceanTemp', 'landTemp', 'mixedTemp'];
 function radio(btn) {
@@ -768,6 +759,10 @@ function zoom(z) {
     $('#zoom').text(map.zoom.toFixed(0));
     makeREST(false);
 }
+
+/*
+    Supporting methods for the map
+*/
 
 // this is a supporting method to map values within a range
 // to a fixed set of colors

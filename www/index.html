@@ -1,8 +1,6 @@
 <!--
  Copyright (c) 2012 Climate Code Foundation (climatecode.org)
  Licensed under the MIT License (LICENSE.txt)
- 
- Version 0.1.0
 -->
 
 <!DOCTYPE html>
@@ -91,20 +89,9 @@
                 <br/>
                 <div onclick="toggle_box(this, 'extra_data')" class='link' style='display:block'>Extra &gt;</div>
                 <div id='extra_data' class='popup'>
-                    Data:
-                    <br/>
                     <div class='btn' onclick="toggle(this, 'topo')">topography</div>
                     <br/>
                     <div class='btn' onclick="toggle(this, 'radiance')">night light radiance</div>
-                    <br/>
-                    <br/>
-                    Intermediate steps [2010]:
-                    <br/>
-                    <div class='btn' onclick="toggle(this, 'ost2010')">ocean input</div>
-                    <br/>
-                    <div class='btn' onclick="toggle(this, 'lt2010')">land merged</div>
-                    <br/>
-                    <div class='btn' onclick="toggle(this, 'landmask')">land mask</div>
                 </div>
                 <br/>
                 <div class='btn' onclick="toggle(this, 'populated')" id='cities_btn'>cities</div>
@@ -138,6 +125,9 @@
                 </div>
                 <canvas id='colorLegend' style='width:150px; height:60px; border:1px solid #000000'></canvas>
                 <script>
+                    /*
+                        Draws the temperature color key on the above canvas
+                    */
                     (function() {
                         var c = document.getElementById('colorLegend');
                         c.width = 150;

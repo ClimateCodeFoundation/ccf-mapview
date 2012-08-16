@@ -31,7 +31,14 @@ Server:
 
 ==Installation==
 
- Extract to any directory under a web server (Apache is known to work)
+ To build data dependencies, including running ccc-gistemp, run "build":
+ 
+ ./build
+ 
+ This should take 30 minutes to an hour
+ 
+
+ Move www/ to any directory under a web server (Apache is known to work)
 
  Modify the configuration to set the content-type and content-encoding
  of our data files.
@@ -43,7 +50,7 @@ Server:
  The following works for Apache:
 
  Set these directives in your configuration file where they will take
- effect on the data/gz directory.
+ effect on the www/data/gz directory.
  
     AddEncoding gzip .jgz
     AddType text/json .jgz

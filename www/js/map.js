@@ -1,8 +1,6 @@
 /*
  Copyright (c) 2012 Climate Code Foundation (climatecode.org)
  Licensed under the MIT License (LICENSE.txt)
- 
- Version 0.1.0
 */
 
 // Euclidean distance
@@ -33,6 +31,9 @@ function loadData(src, layer, index, res, subid) {
     JSON(src, handle, {});
 }
 
+/*
+    The basic navigable map - made up of a set of stacked layers
+*/
 function CanvasMap(container, zoom) {
     this.zoom = zoom;
     this.layers = [];
@@ -109,19 +110,7 @@ function CanvasMap(container, zoom) {
         var degreesHigh = this.height / this.zoom;
         var xchange = x * degreesWide;
         var ychange = y * degreesHigh;
-        /*
-        // fix horizontal overrun
-        if(this.e + xchange > BOUNDS[3])
-            xchange = BOUNDS[3] - this.e;
-        else if(this.w + xchange < BOUNDS[1])
-            xchange = BOUNDS[1] - this.w;
-            
-        // fix vertical overrun
-        if(this.n + ychange > BOUNDS[2])
-            ychange = BOUNDS[2] - this.n;
-        else if(this.s + ychange < BOUNDS[0])
-            ychange = BOUNDS[0] - this.s;
-        */
+        
         var s = this.s + ychange;
         var w = this.w + xchange;
         var n = this.n + ychange;
@@ -287,8 +276,7 @@ function CanvasMap(container, zoom) {
  
     $(window).resize(attacher(this, this.resize));
     
-    // load 8k grid data
-    // make this more elegant... later
+    // load 8k grid data when the map is created (now)
     var handle = {
         'callback': attacher(this, function(data) {
             this.grid = [];
@@ -302,12 +290,12 @@ function CanvasMap(container, zoom) {
             console.log(msg);
         }
     };
-    JSON('data/grid.json', handle, {});
+    JSON('data/gz/static/grid.jgz', handle, {});
     
     this.toggle8kGrid = function() {
         if(!this.gridDrawn) {
             this.gridDrawn = true;
-            this.addLayer('8kgrid', [['single','grid',[[FAR, 'data/landmask.grid.json']],{ lineWidth: 0.5, strokeStyle: '#FFFFFF' }]]); // [type, resolutions, style]
+            this.addLayer('8kgrid', [['single','grid',[[FAR, 'data/gz/static/landmask.grid.jgz']],{ lineWidth: 0.5, strokeStyle: '#FFFFFF' }]]); // [type, resolutions, style]
             this.show('8kgrid');
         }
         else if(this.layers[layer_map['8kgrid']].visible()) {
@@ -324,7 +312,10 @@ function CanvasMap(container, zoom) {
     }
 }
 
-
+/*
+    This layer sits at the top of the stack, captures events,
+    passes them to the correct owner, and shows the mouse coordinates
+*/
 function ControlLayer(map, container) {
     this.$canvas = $('<canvas>');
     this.$canvas.addClass('layer');
@@ -357,7 +348,9 @@ function ControlLayer(map, container) {
     }));
 }
 
-
+/*
+    A generic data layer, one for each data set (land, lakes, temperature grid, etc)
+*/
 function Layer(map, container) {
     this.$canvas = $('<canvas>');
     this.$canvas.addClass('layer');
@@ -702,7 +695,10 @@ function PointData(res, data, style) {
     }
 }
 
-
+/*
+    Holds a set of vector data and draws on command to the
+    containing layer/map
+*/
 function VectorData(res, data, style) {
     var resolutions = res;
     
