@@ -225,10 +225,10 @@ function changeYear(delta) {
         map.changeLayer('oceanTemp', year);
         map.changeLayer('landTemp', year);
         map.changeLayer('mixedTemp', year);
+        makeREST();
         return true;
     }
     return false;
-    makeREST();
 }
 
 /*

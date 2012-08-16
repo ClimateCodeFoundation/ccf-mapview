@@ -5,13 +5,13 @@ import shutil
 
 def main():
     print "Parsing station data..."
-    #parse_stations('data')
+    parse_stations('data')
     print "Combining cell data..."
-    #combine_cell_info('data')
+    combine_cell_info('data')
     print "Gzipping everything..."
     if not os.path.exists('www/data/gz'):
         os.makedirs('www/data/gz')
-    gz_everything('data', 'www/data/gz')
+    gz_everything('data', 'www/data')
 
 '''
     Parse station information
@@ -139,9 +139,9 @@ def parse_stations(path):
     keys = ['ID', 'NAME', 'LATITUDE', 'LONGITUDE', 'STNELEV', 'GRELEV', 'STVEG', 'GRVEG', 'STLOC', 'TOPO', 'AIRSTN', 'OCNDIS', 'TOWNDIS', 'POPSIZ', 'POPCSS', 'POPCLS', 'USLIGHT', 'LIGHT']
     desc = ['ID', 'name', 'latitude', 'longitude', 'elevation', 'grid elevation', 'vegetation', 'grid vegetation', 'body of water', 'topography', 'at airport', 'distance to ocean', 'distance to town', 'population of town', 'population class (POPCSS)', 'population class (POPCLS)', 'US night light radiance', 'night light radiance']
     
-    if not os.path.exists(path + '/stations') or not os.isdir(path + '/stations'):
+    if not os.path.exists(path + '/stations') or not os.path.isdir(path + '/stations'):
         os.mkdir(path + '/stations')
-    if not os.path.exists(path + '/csv') or not os.isdir(path + '/csv'):
+    if not os.path.exists(path + '/csv') or not os.path.isdir(path + '/csv'):
         os.mkdir(path + '/csv')
     
     for i,s in stations.iteritems():
@@ -261,25 +261,40 @@ def zipcopy(fin, fout):
     f_out.close()
     f_in.close()
 
-def recurse_gz(fromhere, tohere):
+def gz(fromhere, tohere):
     count = 0
     for f in os.listdir(fromhere):
-        if fromhere + '/' + f == tohere: # don't go there
-            continue
-        if f == 'csv': # just copy
-            shutil.copytree(fromhere + '/' + f, tohere + '/' + f)
-            continue
         if os.path.isdir(fromhere + '/' + f):
-            if not os.path.exists(tohere + '/' + f):
-                os.mkdir(tohere + '/' + f)
-            count += recurse_gz(fromhere + '/' + f, tohere + '/' + f)
+            continue
         else:
             zipcopy(fromhere + '/' + f, tohere + '/' + f[:f.rindex('.')] + '.jgz') # shear off the .json and change it to .jgz (type: text/json, encoding: gzip)
             count += 1
     return count
 
 def gz_everything(fromhere, tohere):
-    print '%i files compressed' % recurse_gz(fromhere, tohere)
+    count = 0
+    
+    # compress data
+    if not os.path.exists('www/data/gz/sbx'):
+        os.makedirs('www/data/gz/sbx')
+    if not os.path.exists('www/data/gz/stations'):
+        os.makedirs('www/data/gz/stations')
+    if not os.path.exists('www/data/gz/static'):
+        os.makedirs('www/data/gz/static')
+    if not os.path.exists('www/data/gz/temp'):
+        os.makedirs('www/data/gz/temp')
+    count += gz('data', 'www/data/gz')
+    count += gz('data/sbx', 'www/data/gz/sbx')
+    count += gz('data/stations', 'www/data/gz/stations')
+    count += gz('data/static', 'www/data/gz/static')
+    count += gz('data/temp', 'www/data/gz/temp')
+    
+    # copy csv directory without compressing
+    if os.path.exists('www/data/csv'):
+        shutil.rmtree('www/data/csv')
+    shutil.copytree('data/csv', 'www/data/csv')
+    
+    print '%i files compressed' % count
 
 
 if __name__ == "__main__":

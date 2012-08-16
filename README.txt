@@ -27,6 +27,9 @@ Client:
 Server:
  Almost any server should work. The only tricky part is setting the
  encoding on the compressed data files (see Installation).
+ 
+ The modified ccc-gistemp files and various build dependencies are only
+ guaranteed to work with ccc-gistemp revision 1011 (Jun 15, 2012).
 
 
 ==Installation==
